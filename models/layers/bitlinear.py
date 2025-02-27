@@ -1,9 +1,10 @@
+from typing import Callable
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Callable
-from models.quantization import *
 
+from models.quantization import *
 
 class QLinearSymmetric(nn.Linear):
     """Quantized linear layer with scaling factors.
@@ -78,4 +79,3 @@ class BitLinear(QLinearSymmetric):
         x = self.norm(x)
         x = super().forward(x)
         return x
-
