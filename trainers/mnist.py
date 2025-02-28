@@ -35,12 +35,17 @@ class MNISTTrainer(pl.LightningModule):
             **{f"backbone_{k}": v for k, v in backbone_kwargs.items()},  # Flatten backbone_kwargs
             **{f"head_{k}": v for k, v in head_kwargs.items()}  # Flatten head_kwargs
         }
+        self.experiment_name = self.experiment_name(hparams)
         self.save_hyperparameters(hparams)  # Save all hyperparameters at once
 
         self.learning_rate = learning_rate
         self.num_workers = num_workers
         self.batch_size = batch_size
         self.loss_fn = torch.nn.CrossEntropyLoss()
+
+
+    def experiment_name(self, hparams): 
+        return f"Backbone[{hparams['backbone']}]-LayerType[{hparams['backbone_linear_layer']}]-Activation[{hparams['backbone_activation_layer']}]"
 
     def forward(self, x):
         # Flatten the input: [B, 1, 28, 28] -> [B, 784]
