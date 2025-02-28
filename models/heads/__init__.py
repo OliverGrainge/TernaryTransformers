@@ -5,5 +5,5 @@ __all__ = ["ImageClassificationHead"]
 
 HEADS_REGISTRY = {
     "imageclassificationhead": ImageClassificationHead,
-    "none": nn.Identity
+    "none": nn.Identity,
 }

@@ -123,8 +123,12 @@ class ViT(nn.Module):
             dropout=dropout,
             attention_norm_layer=LAYERS_REGISTRY[attention_norm_layer.lower()],
             feedforward_norm_layer=LAYERS_REGISTRY[feedforward_norm_layer.lower()],
-            attention_activation_layer=LAYERS_REGISTRY[attention_activation_layer.lower()],
-            feedforward_activation_layer=LAYERS_REGISTRY[feedforward_activation_layer.lower()],
+            attention_activation_layer=LAYERS_REGISTRY[
+                attention_activation_layer.lower()
+            ],
+            feedforward_activation_layer=LAYERS_REGISTRY[
+                feedforward_activation_layer.lower()
+            ],
             attention_linear_layer=LAYERS_REGISTRY[attention_linear_layer.lower()],
             feedforward_linear_layer=LAYERS_REGISTRY[feedforward_linear_layer.lower()],
         )

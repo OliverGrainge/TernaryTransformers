@@ -6,6 +6,7 @@ import torch.nn.functional as F
 
 from models.quantization import *
 
+
 class QLinearSymmetric(nn.Linear):
     """Quantized linear layer with scaling factors.
 

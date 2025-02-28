@@ -10,19 +10,19 @@ from models.helper import create_model
 from trainers import MNISTTrainer
 import pytorch_lightning as pl
 
-model = create_model(
-    backbone="mlp",
-    head="none",
-    backbone_kwargs={"in_dim": 784, "mlp_dim": 512, "out_dim": 10},
-)
 
 trainer = pl.Trainer(
     max_epochs=10,
-    logger=pl.loggers.WandbLogger(project="mnist-classification", name="my-mnist-experiment")
+    logger=pl.loggers.WandbLogger(
+        project="mnist-classification", name="my-mnist-experiment"
+    ),
 )
-module = MNISTTrainer(model, batch_size=128)
-
+module = MNISTTrainer(
+    backbone="mlp",
+    head="none",
+    backbone_kwargs={"in_dim": 784, "mlp_dim": 512, "out_dim": 10},
+    batch_size=128,
+)
 
 
 trainer.fit(module)
-
