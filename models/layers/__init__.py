@@ -11,4 +11,5 @@ LAYERS_REGISTRY = {
     "rmsnorm": nn.RMSNorm,
     "gelu": nn.GELU,
     "relu": nn.ReLU,
+    "identity": nn.Identity,
 }

@@ -11,8 +11,8 @@ class MNISTTrainer(pl.LightningModule):
         self,
         backbone: str,
         head: str,
-        backbone_kwargs: dict = {},
-        head_kwargs: dict = {},
+        backbone_kwargs: dict = {"in_dim": 784, "mlp_dim": 512, "out_dim": 10},
+        head_kwargs: dict = {"head": "none"},
         learning_rate: float = 1e-4,
         num_workers: int = 0,
         batch_size: int = 12,
@@ -36,7 +36,7 @@ class MNISTTrainer(pl.LightningModule):
             **{f"head_{k}": v for k, v in head_kwargs.items()}  # Flatten head_kwargs
         }
         self.save_hyperparameters(hparams)  # Save all hyperparameters at once
-        
+
         self.learning_rate = learning_rate
         self.num_workers = num_workers
         self.batch_size = batch_size
