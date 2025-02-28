@@ -1,0 +1,7 @@
+*.pyc 
+*data/*
+*.jpg
+*.csv
+examples/lightning_logs/*
+examples/wandb/*
+examples/data/*
