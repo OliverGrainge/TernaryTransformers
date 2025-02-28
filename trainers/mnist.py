@@ -5,10 +5,12 @@ from torchvision import datasets, transforms
 from typing import Optional
 
 class MNISTTrainer(pl.LightningModule):
-    def __init__(self, model: torch.nn.Module, learning_rate: float = 1e-3):
+    def __init__(self, model: torch.nn.Module, learning_rate: float = 1e-4, num_workers: int=0, batch_size: int=12):
         super().__init__()
         self.model = model
         self.learning_rate = learning_rate
+        self.num_workers = num_workers
+        self.batch_size = batch_size
         self.loss_fn = torch.nn.CrossEntropyLoss()
 
     def forward(self, x):
@@ -41,7 +43,7 @@ class MNISTTrainer(pl.LightningModule):
             transforms.Normalize((0.1307,), (0.3081,))  # MNIST mean and std
         ])
         dataset = datasets.MNIST('data', train=True, download=True, transform=transform)
-        return DataLoader(dataset, batch_size=8, shuffle=True, num_workers=0)
+        return DataLoader(dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
 
     def val_dataloader(self):
         transform = transforms.Compose([
@@ -49,4 +51,4 @@ class MNISTTrainer(pl.LightningModule):
             transforms.Normalize((0.1307,), (0.3081,))  # MNIST mean and std
         ])
         dataset = datasets.MNIST('data', train=False, download=True, transform=transform)
-        return DataLoader(dataset, batch_size=8, num_workers=0)
+        return DataLoader(dataset, batch_size=self.batch_size, num_workers=self.num_workers)

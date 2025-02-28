@@ -10,23 +10,35 @@ from models.layers import LAYERS_REGISTRY
 
 
 class MLP(nn.Module):
-    def __init__(self, in_dim: int, mlp_dim: int, out_dim: int=10.0, dropout: float = 0.0, linear_layer: str = "Linear", activation_layer: str = "RELU", norm_layer: str = "LayerNorm"):
+    def __init__(self, in_dim: int, mlp_dim: int, out_dim: int=10, num_layers: int=3, dropout: float = 0.0, 
+                 linear_layer: str = "Linear", activation_layer: str = "RELU", norm_layer: str = "LayerNorm"):
         super().__init__()
         linear_layer = LAYERS_REGISTRY[linear_layer.lower()]
         activation_layer = LAYERS_REGISTRY[activation_layer.lower()]
         norm_layer = LAYERS_REGISTRY[norm_layer.lower()]
+        
         self.norm = norm_layer(in_dim)
-        self.linear1 = linear_layer(in_dim, mlp_dim)
-        self.activation = activation_layer()
-        self.linear2 = linear_layer(mlp_dim, out_dim)
-        self.dropout = nn.Dropout(dropout)
+        layers = []
+        
+        # First layer
+        layers.append(linear_layer(in_dim, mlp_dim))
+        layers.append(activation_layer())
+        layers.append(nn.Dropout(dropout))
+        
+        # Middle layers
+        for _ in range(num_layers - 2):
+            layers.append(linear_layer(mlp_dim, mlp_dim))
+            layers.append(activation_layer())
+            layers.append(nn.Dropout(dropout))
+        
+        # Final layer
+        layers.append(linear_layer(mlp_dim, out_dim))
+        
+        self.layers = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.norm(x)
-        x = self.linear1(x)
-        x = self.activation(x)
-        x = self.dropout(x)
-        x = self.linear2(x)
+        x = self.layers(x)
         return x
 
 
