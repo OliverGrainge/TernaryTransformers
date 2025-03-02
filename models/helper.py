@@ -1,9 +1,48 @@
+import torch
 import torch.nn as nn
 import inspect
 
 from models.heads import HEADS_REGISTRY
 from models.transformers import TRANSFORMERS_REGISTRY
 
+class CustomModel(nn.Module):
+    def __init__(self, transformer, head):
+        super().__init__()
+        self.transformer = transformer
+        self.head = head
+        
+    def forward(self, **args):
+        x = self.transformer(**args)
+        return self.head(x)
+        
+    def compute_decay(self, reduction: str = "mean") -> torch.Tensor:
+        if reduction not in ["mean", "sum"]:
+            raise ValueError("reduction must be either 'mean' or 'sum'")
+            
+        if not hasattr(self, '_decay_modules'):
+            self._decay_modules = [m for m in self.modules() 
+                                 if hasattr(m, "compute_layer_decay")]
+            
+        decay_loss = torch.tensor(0.0).to(next(self.parameters()).device)
+        n_modules = 0
+        
+        for layer in self._decay_modules:
+            decay = layer.compute_layer_decay()
+            if decay is not None:
+                n_modules += 1
+                decay_loss += decay
+        
+        if reduction == "mean":
+            return decay_loss / max(n_modules, 1)  # Avoid division by zero
+        return decay_loss  # sum case
+
+    def set_progress(self, progress: float):
+        if not hasattr(self, '_progress_modules'):
+            self._progress_modules = [m for m in self.modules() 
+                                    if hasattr(m, "set_layer_progress")]
+            
+        for layer in self._progress_modules:
+            layer.weight.data = layer.weight.data * progress
 
 def create_model(
     backbone: str, head: str, backbone_kwargs: dict = {}, head_kwargs: dict = {}
@@ -34,5 +73,8 @@ def create_model(
     # Create model components with all parameters
     transformer = transformer_cls(**transformer_defaults)
     head = head_cls(**head_defaults)
-    model = nn.Sequential(transformer, head)
+    model = CustomModel(transformer, head)
+
     return model, transformer_defaults, head_defaults
+
+

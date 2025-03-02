@@ -133,6 +133,7 @@ class ViT(nn.Module):
             feedforward_linear_layer=LAYERS_REGISTRY[feedforward_linear_layer.lower()],
         )
 
+
     def forward(self, img: torch.Tensor) -> torch.Tensor:
         x = self.to_patch_embedding(img)
         b, n, _ = x.shape
@@ -142,3 +143,93 @@ class ViT(nn.Module):
         x = self.dropout(x)
         x = self.transformer(x)
         return x
+
+
+class ViTSmall(ViT):
+    def __init__(
+        self,
+        image_size: Union[int, Tuple[int, int]] = 224,
+        patch_size: Union[int, Tuple[int, int]] = 16,
+        dim: int = 384,  # smaller embedding dimension
+        depth: int = 8,  # fewer transformer layers
+        heads: int = 6,  # fewer attention heads
+        mlp_dim: int = 1536,  # smaller MLP dimension
+        in_channels: int = 3,
+        dim_head: int = 64,
+        dropout: float = 0.0,
+        emb_dropout: float = 0,
+        embedding_norm: str = "LayerNorm",
+        embedding_linear: str = "Linear",
+        attention_linear_layer: str = "Linear",
+        attention_norm_layer: str = "LayerNorm",
+        feedforward_linear_layer: str = "Linear",
+        feedforward_norm_layer: str = "LayerNorm",
+        attention_activation_layer: str = "GELU",
+        feedforward_activation_layer: str = "GELU",
+    ) -> None:
+        super().__init__(
+            image_size=image_size,
+            patch_size=patch_size,
+            dim=dim,
+            depth=depth,
+            heads=heads,
+            mlp_dim=mlp_dim,
+            in_channels=in_channels,
+            dim_head=dim_head,
+            dropout=dropout,
+            emb_dropout=emb_dropout,
+            embedding_norm=embedding_norm,
+            embedding_linear=embedding_linear,
+            attention_linear_layer=attention_linear_layer,
+            attention_norm_layer=attention_norm_layer,
+            feedforward_linear_layer=feedforward_linear_layer,
+            feedforward_norm_layer=feedforward_norm_layer,
+            attention_activation_layer=attention_activation_layer,
+            feedforward_activation_layer=feedforward_activation_layer,
+        )
+    
+
+
+class MiniViT(ViT):
+    def __init__(
+        self,
+        image_size: Union[int, Tuple[int, int]] = 224,
+        patch_size: Union[int, Tuple[int, int]] = 4,
+        dim: int = 128,  # smaller embedding dimension
+        depth: int = 2,  # fewer transformer layers
+        heads: int = 4,  # fewer attention heads
+        mlp_dim: int = 128 * 3,  # smaller MLP dimension
+        in_channels: int = 1,
+        dim_head: int = 64,
+        dropout: float = 0.1,
+        emb_dropout: float = 0,
+        embedding_norm: str = "LayerNorm",
+        embedding_linear: str = "Linear",
+        attention_linear_layer: str = "Linear",
+        attention_norm_layer: str = "LayerNorm",
+        feedforward_linear_layer: str = "Linear",
+        feedforward_norm_layer: str = "LayerNorm",
+        attention_activation_layer: str = "GELU",
+        feedforward_activation_layer: str = "GELU",
+    ) -> None:
+        super().__init__(
+            image_size=image_size,
+            patch_size=patch_size,
+            dim=dim,
+            depth=depth,
+            heads=heads,
+            mlp_dim=mlp_dim,
+            in_channels=in_channels,
+            dim_head=dim_head,
+            dropout=dropout,
+            emb_dropout=emb_dropout,
+            embedding_norm=embedding_norm,
+            embedding_linear=embedding_linear,
+            attention_linear_layer=attention_linear_layer,
+            attention_norm_layer=attention_norm_layer,
+            feedforward_linear_layer=feedforward_linear_layer,
+            feedforward_norm_layer=feedforward_norm_layer,
+            attention_activation_layer=attention_activation_layer,
+            feedforward_activation_layer=feedforward_activation_layer,
+        )
+    

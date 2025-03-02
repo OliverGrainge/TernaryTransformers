@@ -6,13 +6,13 @@ from typing import Optional
 from models.helper import create_model
 
 
-class MNISTTrainer(pl.LightningModule):
+class CIFAR10Trainer(pl.LightningModule):
     def __init__(
         self,
-        backbone: str,
-        head: str,
-        backbone_kwargs: dict = {"in_dim": 784, "mlp_dim": 512, "out_dim": 10},
-        head_kwargs: dict = {"head": "none"},
+        backbone: str = "MiniViT",
+        head: str = "ImageClassificationHead",
+        backbone_kwargs: dict = {"image_size": 32},
+        head_kwargs: dict = {"num_classes": 10, "dim": 128, "num_layers": 1},
         learning_rate: float = 1e-4,
         num_workers: int = 0,
         batch_size: int = 12,
@@ -39,6 +39,7 @@ class MNISTTrainer(pl.LightningModule):
             'decay_weight': decay_weight,
             'max_epochs': max_epochs
         }
+        print(hparams)
         self.experiment_name = self.experiment_name(hparams)
         self.save_hyperparameters(hparams)  # Save all hyperparameters at once
 
@@ -51,11 +52,10 @@ class MNISTTrainer(pl.LightningModule):
 
 
     def experiment_name(self, hparams): 
-        return f"Backbone[{hparams['backbone']}]-LayerType[{hparams['backbone_linear_layer']}]-Activation[{hparams['backbone_activation_layer']}]"
+        return f"Backbone[{hparams['backbone']}]-LayerType[{hparams['backbone_feedforward_linear_layer']}]-Activation[{hparams['backbone_feedforward_activation_layer']}]"
 
     def forward(self, x):
-        # Flatten the input: [B, 1, 28, 28] -> [B, 784]
-        x = x.view(x.size(0), -1)
+        # Input is already in correct shape: [B, 3, 32, 32]
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
@@ -97,13 +97,14 @@ class MNISTTrainer(pl.LightningModule):
         return torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
     def train_dataloader(self):
-        transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize((0.1307,), (0.3081,)),  # MNIST mean and std
-            ]
-        )
-        dataset = datasets.MNIST("data", train=True, download=True, transform=transform)
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.4914, 0.4822, 0.4465],  # CIFAR10 mean
+                std=[0.2470, 0.2435, 0.2616]    # CIFAR10 std
+            )
+        ])
+        dataset = datasets.CIFAR10("data", train=True, download=True, transform=transform)
         return DataLoader(
             dataset,
             batch_size=self.batch_size,
@@ -112,13 +113,14 @@ class MNISTTrainer(pl.LightningModule):
         )
 
     def val_dataloader(self):
-        transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize((0.1307,), (0.3081,)),  # MNIST mean and std
-            ]
-        )
-        dataset = datasets.MNIST(
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.4914, 0.4822, 0.4465],  # CIFAR10 mean
+                std=[0.2470, 0.2435, 0.2616]    # CIFAR10 std
+            )
+        ])
+        dataset = datasets.CIFAR10(
             "data", train=False, download=True, transform=transform
         )
         return DataLoader(
