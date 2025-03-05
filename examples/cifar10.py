@@ -43,6 +43,15 @@ trainer = pl.Trainer(
     logger=pl.loggers.WandbLogger(
         project="cifar10-classification", name=module.experiment_name
     ),
+    callbacks=[
+        pl.callbacks.ModelCheckpoint(
+            dirpath="checkpoints/cifar10/",
+            filename=f"{module.experiment_name}-{{epoch}}-{{val_loss:.2f}}",
+            save_top_k=1,
+            monitor="val_loss",
+            mode="min"
+        )
+    ],
 )
 
 

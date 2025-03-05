@@ -58,7 +58,7 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
 
         # Others you might want to track
         max_seq_len: int = 128,
-        total_train_samples: int = 10_000,   # For smaller debug runs
+        total_train_samples: int = 20_000,   # For smaller debug runs
         total_val_samples: int = 1_000,
         **extra_kwargs
     ):
@@ -156,7 +156,7 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         """
         # Get prediction logits from model
         logits = self.model(
-            input_ids=input_ids,
+            input_ids,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids
         )  # [batch_size, sequence_length, vocab_size]
@@ -227,7 +227,7 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         Called on each GPU/process. Create the dataset splits, tokenize, etc.
         """
         if stage == "fit" or stage is None:
-            raw_datasets = load_dataset(self.dataset_name, self.dataset_config)
+            raw_datasets = load_dataset(self.dataset_name, self.dataset_config, cache_dir="data")
 
             def tokenize_function(examples):
                 return self.tokenizer(

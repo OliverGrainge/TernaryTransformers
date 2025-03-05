@@ -11,9 +11,9 @@ class CustomModel(nn.Module):
         self.transformer = transformer
         self.head = head
         
-    def forward(self, **args):
-        x = self.transformer(**args)
-        return self.head(x)
+    def forward(self, x, **kwargs):
+        transformer_output = self.transformer(x, **kwargs)
+        return self.head(transformer_output)
         
     def compute_decay(self, reduction: str = "mean") -> torch.Tensor:
         if reduction not in ["mean", "sum"]:

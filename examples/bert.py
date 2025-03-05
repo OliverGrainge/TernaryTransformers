@@ -22,12 +22,12 @@ module = WikiText2BertMLMTrainer(
     head="MLMHead",
     backbone_kwargs={
         'vocab_size': 30522,
-        'max_seq_len': 256,
-        'dim': 64,
-        'depth': 3,
-        'heads': 4,
-        'mlp_dim': 256,
-        'dim_head': 16,
+        'max_seq_len': 512,
+        'dim': 256,
+        'depth': 6,
+        'heads': 8,
+        'mlp_dim': 1024,
+        'dim_head': 32,
         'dropout': 0.1,
         'emb_dropout': 0.1,
         'num_segments': 2,
@@ -38,8 +38,8 @@ module = WikiText2BertMLMTrainer(
         'attention_linear_layer': 'Linear',
         'feedforward_linear_layer': 'Linear',
     },
-    head_kwargs={"dim": 64, "vocab_size": 30522},
-    batch_size=32,
+    head_kwargs={"dim": 256, "vocab_size": 30522},
+    batch_size=128,
     dataset=dataset,
 )
 
@@ -49,6 +49,15 @@ trainer = pl.Trainer(
     logger=pl.loggers.WandbLogger(
         project="WikiText2-MLM", name=module.experiment_name
     ),
+    callbacks=[
+        pl.callbacks.ModelCheckpoint(
+            dirpath="checkpoints/bert/",
+            filename=f"{module.experiment_name}-{{epoch}}-{{val_loss:.2f}}",
+            save_top_k=1,
+            monitor="val_loss",
+            mode="min"
+        )
+    ],
 )
 
 
