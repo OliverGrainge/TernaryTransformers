@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Function
 
+# More can be found about this layer here:https://arxiv.org/abs/2402.17764
 
 class BaseQuantizerSTE(Function):
     """

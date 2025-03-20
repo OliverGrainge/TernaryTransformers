@@ -1,11 +1,12 @@
 import torch.nn as nn
 
 from .bitlinear import BitLinear
-
-__all__ = ["BitLinear", "Linear", "LayerNorm", "RMSNorm"]
+from .ternaryllm import TLinear
+__all__ = ["BitLinear", "TLinear", "Linear", "LayerNorm", "RMSNorm"]
 
 LAYERS_REGISTRY = {
     "bitlinear": BitLinear,
+    "tlinear": TLinear,
     "linear": nn.Linear,
     "layernorm": nn.LayerNorm,
     "rmsnorm": nn.RMSNorm,
