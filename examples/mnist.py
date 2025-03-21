@@ -13,8 +13,8 @@ import pytorch_lightning as pl
 module = MNISTTrainer(
     backbone="mlp",
     head="none",
-    backbone_kwargs={"in_dim": 784, "mlp_dim": 512, "out_dim": 10, "linear_layer": "bitlinear", "activation_layer": "RELU", "num_layers": 6, "norm_layer": "identity"},
-    batch_size=32,
+    backbone_kwargs={"in_dim": 784, "mlp_dim": 512, "out_dim": 10, "linear_layer": "trilinear", "activation_layer": "RELU", "num_layers": 6, "norm_layer": "layernorm"},
+    batch_size=64,
 )
 
 
@@ -34,6 +34,7 @@ trainer = pl.Trainer(
         )
     ],
     log_every_n_steps=5,
+    val_check_interval=0.25
 )
 
 

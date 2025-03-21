@@ -12,20 +12,21 @@ class WeightQuantizer(Function):
     @staticmethod
     def forward(ctx, w, alpha, gamma):
         out_features, in_features = w.shape
-        scale = 1.0 / (0.7 * w.abs().mean(dim=1, keepdim=True)).clamp(min=1e-5)
+        delta = (0.7 * w.abs().mean(dim=1, keepdim=True)).clamp(min=1e-5)
+        scale = 1.0 / delta
         T = (w * scale).round().clamp_(-1, 1)
         D = alpha * T + gamma 
-        ctx.save_for_backward(T, w, scale, alpha)
+        ctx.save_for_backward(T, w, delta, alpha)
         return D
     
     @staticmethod
     def backward(ctx, grad_output):
-        T, w, scale, alpha = ctx.saved_tensors
-        zero_mask = (w.abs() <= scale)
+        T, w, delta, alpha = ctx.saved_tensors
+        zero_mask = (w.abs() <= delta)
 
         grad_w = grad_output * alpha * zero_mask
-        grad_alpha = torch.sum(grad_output * T)
-        grad_gamma = torch.sum(grad_output)
+        grad_alpha = torch.sum(grad_output * T).reshape_as(alpha)
+        grad_gamma = torch.sum(grad_output).reshape(1)
         return grad_w, grad_alpha, grad_gamma
     
 
