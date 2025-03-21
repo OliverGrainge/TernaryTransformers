@@ -13,7 +13,7 @@ class MNISTTrainer(pl.LightningModule):
         head: str,
         backbone_kwargs: dict = {"in_dim": 784, "mlp_dim": 512, "out_dim": 10},
         head_kwargs: dict = {"head": "none"},
-        learning_rate: float = 1e-5,
+        learning_rate: float = 1e-4,
         num_workers: int = 0,
         batch_size: int = 12,
         decay_weight: float = 0.1,  # Weight for the decay loss
