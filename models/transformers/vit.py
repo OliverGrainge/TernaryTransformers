@@ -133,7 +133,6 @@ class ViT(nn.Module):
             feedforward_linear_layer=LAYERS_REGISTRY[feedforward_linear_layer.lower()],
         )
 
-
     def forward(self, img: torch.Tensor) -> torch.Tensor:
         x = self.to_patch_embedding(img)
         b, n, _ = x.shape
@@ -187,7 +186,6 @@ class ViTSmall(ViT):
             attention_activation_layer=attention_activation_layer,
             feedforward_activation_layer=feedforward_activation_layer,
         )
-    
 
 
 class MiniViT(ViT):
@@ -232,4 +230,3 @@ class MiniViT(ViT):
             attention_activation_layer=attention_activation_layer,
             feedforward_activation_layer=feedforward_activation_layer,
         )
-    

@@ -29,15 +29,17 @@ class MNISTTrainer(pl.LightningModule):
         )
         # Create a dictionary with all hyperparameters
         hparams = {
-            'backbone': backbone,
-            'head': head,
-            'learning_rate': learning_rate,
-            'num_workers': num_workers,
-            'batch_size': batch_size,
-            **{f"backbone_{k}": v for k, v in backbone_kwargs.items()},  # Flatten backbone_kwargs
+            "backbone": backbone,
+            "head": head,
+            "learning_rate": learning_rate,
+            "num_workers": num_workers,
+            "batch_size": batch_size,
+            **{
+                f"backbone_{k}": v for k, v in backbone_kwargs.items()
+            },  # Flatten backbone_kwargs
             **{f"head_{k}": v for k, v in head_kwargs.items()},  # Flatten head_kwargs
-            'decay_weight': decay_weight,
-            'max_epochs': max_epochs
+            "decay_weight": decay_weight,
+            "max_epochs": max_epochs,
         }
         self.experiment_name = self.experiment_name(hparams)
         self.save_hyperparameters(hparams)  # Save all hyperparameters at once
@@ -49,8 +51,7 @@ class MNISTTrainer(pl.LightningModule):
         self.decay_weight = decay_weight
         self.max_epochs = max_epochs
 
-
-    def experiment_name(self, hparams): 
+    def experiment_name(self, hparams):
         return f"Backbone[{hparams['backbone']}]-LayerType[{hparams['backbone_linear_layer']}]-Activation[{hparams['backbone_activation_layer']}]"
 
     def forward(self, x):
@@ -62,26 +63,26 @@ class MNISTTrainer(pl.LightningModule):
         # Calculate current progress (0 to 1)
         current_progress = self.current_epoch / self.max_epochs
         self.model.set_progress(current_progress)
-        
+
         x, y = batch
         logits = self(x)
-        
+
         # Compute main loss
         classification_loss = self.loss_fn(logits, y)
-        
+
         # Compute decay loss
         decay_loss = self.model.compute_decay(reduction="mean")
-        
+
         # Combine losses
 
         total_loss = classification_loss + self.decay_weight * decay_loss
-        
+
         # Log all components
         self.log("train_loss", total_loss)
         self.log("train_classification_loss", classification_loss)
         self.log("train_decay_loss", decay_loss)
         self.log("current_progress", current_progress)
-        
+
         return total_loss
 
     def validation_step(self, batch, batch_idx):

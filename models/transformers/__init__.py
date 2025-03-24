@@ -7,8 +7,8 @@ __all__ = ["ViT", "MiniViT", "ViTSmall", "MLP", "Bert", "CausalTransformer"]
 
 TRANSFORMERS_REGISTRY = {
     "vit": ViT,
-    "minivit": MiniViT, 
-    "vitsmall": ViTSmall, 
+    "minivit": MiniViT,
+    "vitsmall": ViTSmall,
     "mlp": MLP,
     "bert": Bert,
     "causaltransformer": CausalTransformer,

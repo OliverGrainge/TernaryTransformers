@@ -49,5 +49,3 @@ class MLP(nn.Module):
         x = self.norm(x)
         x = self.layers(x)
         return x
-    
-    

@@ -5,6 +5,7 @@ import torch.nn as nn
 from einops import rearrange
 from einops.layers.torch import Rearrange
 
+
 class TransformerAttention(nn.Module):
     def __init__(
         self,
@@ -35,7 +36,9 @@ class TransformerAttention(nn.Module):
             else nn.Identity()
         )
 
-    def forward(self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         x = self.norm(x)
 
         qkv = self.to_qkv(x).chunk(3, dim=-1)
@@ -47,7 +50,7 @@ class TransformerAttention(nn.Module):
         if attention_mask is not None:
             # Expand mask for multiple heads and convert 0s to -inf, 1s to 0
             mask = attention_mask[:, None, None, :]  # [batch, 1, 1, seq_len]
-            dots = dots.masked_fill(mask == 0, float('-inf'))
+            dots = dots.masked_fill(mask == 0, float("-inf"))
 
         attn = self.attend(dots)
         attn = self.dropout(attn)

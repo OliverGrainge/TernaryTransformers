@@ -13,6 +13,7 @@ class CausalTransformer(nn.Module):
     Similar to the Transformer block but with causal attention masking
     for autoregressive prediction.
     """
+
     def __init__(
         self,
         dim: int,
@@ -57,7 +58,9 @@ class CausalTransformer(nn.Module):
             )
         self.norm = nn.LayerNorm(dim)
 
-    def forward(self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         for attn, ff in self.layers:
             x = attn(x, attention_mask=attention_mask) + x
             x = ff(x) + x
@@ -71,6 +74,7 @@ class GPT(nn.Module):
       2) Passes the embedded sequence through a causal Transformer
       3) Returns logits for next token prediction [batch_size, seq_len, vocab_size]
     """
+
     def __init__(
         self,
         vocab_size: int = 50257,  # Default GPT-2 vocabulary size
@@ -92,9 +96,13 @@ class GPT(nn.Module):
         super().__init__()
 
         # --- Embedding Layers ---
-        self.token_embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=dim)
-        self.position_embedding = nn.Embedding(num_embeddings=max_seq_len, embedding_dim=dim)
-        
+        self.token_embedding = nn.Embedding(
+            num_embeddings=vocab_size, embedding_dim=dim
+        )
+        self.position_embedding = nn.Embedding(
+            num_embeddings=max_seq_len, embedding_dim=dim
+        )
+
         # Dropout after embeddings
         self.embedding_dropout = nn.Dropout(emb_dropout)
 
@@ -108,13 +116,15 @@ class GPT(nn.Module):
             dropout=dropout,
             attention_norm_layer=LAYERS_REGISTRY[attention_norm_layer.lower()],
             feedforward_norm_layer=LAYERS_REGISTRY[feedforward_norm_layer.lower()],
-            attention_activation_layer=LAYERS_REGISTRY[attention_activation_layer.lower()],
-            feedforward_activation_layer=LAYERS_REGISTRY[feedforward_activation_layer.lower()],
+            attention_activation_layer=LAYERS_REGISTRY[
+                attention_activation_layer.lower()
+            ],
+            feedforward_activation_layer=LAYERS_REGISTRY[
+                feedforward_activation_layer.lower()
+            ],
             attention_linear_layer=LAYERS_REGISTRY[attention_linear_layer.lower()],
             feedforward_linear_layer=LAYERS_REGISTRY[feedforward_linear_layer.lower()],
         )
-
-
 
     def forward(
         self,
@@ -139,7 +149,7 @@ class GPT(nn.Module):
 
         # Sum of token and position embeddings
         x = self.token_embedding(input_ids) + self.position_embedding(positions)
-        
+
         # Apply embedding dropout
         x = self.embedding_dropout(x)
 

@@ -26,25 +26,24 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         backbone: str = "Bert",
         head: str = "mlmhead",
         backbone_kwargs: dict = {
-            'vocab_size': 30522,
-            'max_seq_len': 512,
-            'dim': 768,
-            'depth': 12,
-            'heads': 12,
-            'mlp_dim': 3072,
-            'dim_head': 64,
-            'dropout': 0.1,
-            'emb_dropout': 0.1,
-            'num_segments': 2,
-            'attention_norm_layer': 'LayerNorm',
-            'feedforward_norm_layer': 'LayerNorm',
-            'attention_activation_layer': 'GELU',
-            'feedforward_activation_layer': 'GELU',
-            'attention_linear_layer': 'Linear',
-            'feedforward_linear_layer': 'Linear',
+            "vocab_size": 30522,
+            "max_seq_len": 512,
+            "dim": 768,
+            "depth": 12,
+            "heads": 12,
+            "mlp_dim": 3072,
+            "dim_head": 64,
+            "dropout": 0.1,
+            "emb_dropout": 0.1,
+            "num_segments": 2,
+            "attention_norm_layer": "LayerNorm",
+            "feedforward_norm_layer": "LayerNorm",
+            "attention_activation_layer": "GELU",
+            "feedforward_activation_layer": "GELU",
+            "attention_linear_layer": "Linear",
+            "feedforward_linear_layer": "Linear",
         },
         head_kwargs: dict = {"dim": 768, "vocab_size": 30522},
-
         # Data args
         tokenizer_name: str = "bert-base-uncased",
         dataset_name: str = "wikitext",
@@ -52,15 +51,13 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         mlm_probability: float = 0.15,
         batch_size: int = 16,
         num_workers: int = 0,
-
         # Optimizer args
         learning_rate: float = 1e-4,
-
         # Others you might want to track
         max_seq_len: int = 128,
-        total_train_samples: int = 20_000,   # For smaller debug runs
+        total_train_samples: int = 20_000,  # For smaller debug runs
         total_val_samples: int = 1_000,
-        **extra_kwargs
+        **extra_kwargs,
     ):
         """
         Args:
@@ -81,15 +78,15 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         backbone_kwargs = backbone_kwargs or {}
         head_kwargs = head_kwargs or {}
 
-        # 1) Create your model (backbone + head). 
+        # 1) Create your model (backbone + head).
         #    This likely returns something like an nn.Module that does MLM.
-        #    (In practice, you'd define your BERT backbone as 'backbone' 
+        #    (In practice, you'd define your BERT backbone as 'backbone'
         #     and your classification / MLM head as 'head'.)
         self.model, used_backbone_kwargs, used_head_kwargs = create_model(
             backbone=backbone,
             head=head,
             backbone_kwargs=backbone_kwargs,
-            head_kwargs=head_kwargs
+            head_kwargs=head_kwargs,
         )
 
         # 2) Flatten all hyperparameters for logging (like in CIFAR10Trainer).
@@ -108,7 +105,7 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
             "total_val_samples": total_val_samples,
             **{f"backbone_{k}": v for k, v in used_backbone_kwargs.items()},
             **{f"head_{k}": v for k, v in used_head_kwargs.items()},
-            **extra_kwargs
+            **extra_kwargs,
         }
 
         self.experiment_name = self.experiment_name(hparams_dict)
@@ -128,9 +125,7 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         # 3) Hugging Face Tokenizer & Data Collator
         self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_name)
         self.collator = DataCollatorForLanguageModeling(
-            tokenizer=self.tokenizer,
-            mlm=True,
-            mlm_probability=self.mlm_probability
+            tokenizer=self.tokenizer, mlm=True, mlm_probability=self.mlm_probability
         )
 
         # 4) For convenience, keep references to datasets
@@ -140,9 +135,9 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         # 5) Define your loss function (if your model doesn't internally handle it)
         self.loss_fn = nn.CrossEntropyLoss()
 
-    def experiment_name(self, hparams): 
+    def experiment_name(self, hparams):
         return f"Backbone[{hparams['backbone']}]-LayerType[{hparams['backbone_feedforward_linear_layer']}]-Activation[{hparams['backbone_feedforward_activation_layer']}]"
-    
+
     def forward(
         self,
         input_ids: torch.Tensor,
@@ -156,28 +151,26 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         """
         # Get prediction logits from model
         logits = self.model(
-            input_ids,
-            attention_mask=attention_mask,
-            token_type_ids=token_type_ids
+            input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids
         )  # [batch_size, sequence_length, vocab_size]
-        
+
         # If no labels provided, return logits
         if labels is None:
             return logits
-            
+
         # Create mask for non-ignored positions (where labels != -100)
         masked_positions = labels != -100  # [batch_size, sequence_length]
-        
+
         # Get logits and labels for masked positions only
         masked_logits = logits[masked_positions]  # [num_masked_tokens, vocab_size]
         masked_labels = labels[masked_positions]  # [num_masked_tokens]
-        
+
         # Compute loss only on masked tokens
         loss = self.loss_fn(
             masked_logits,  # [num_masked_tokens, vocab_size]
-            masked_labels   # [num_masked_tokens]
+            masked_labels,  # [num_masked_tokens]
         )
-        
+
         return loss
 
     # -----------------
@@ -227,14 +220,16 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         Called on each GPU/process. Create the dataset splits, tokenize, etc.
         """
         if stage == "fit" or stage is None:
-            raw_datasets = load_dataset(self.dataset_name, self.dataset_config, cache_dir="data")
+            raw_datasets = load_dataset(
+                self.dataset_name, self.dataset_config, cache_dir="data"
+            )
 
             def tokenize_function(examples):
                 return self.tokenizer(
                     examples["text"],
                     truncation=True,
                     max_length=self.max_seq_len,
-                    return_special_tokens_mask=True
+                    return_special_tokens_mask=True,
                 )
 
             train_ds = raw_datasets["train"]
@@ -242,19 +237,17 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
 
             # Tokenize
             train_ds = train_ds.map(
-                tokenize_function, 
-                batched=True, 
-                remove_columns=["text"]
+                tokenize_function, batched=True, remove_columns=["text"]
             )
             val_ds = val_ds.map(
-                tokenize_function, 
-                batched=True, 
-                remove_columns=["text"]
+                tokenize_function, batched=True, remove_columns=["text"]
             )
 
             # (Optionally) shorten for debugging
             if self.total_train_samples:
-                train_ds = train_ds.select(range(min(self.total_train_samples, len(train_ds))))
+                train_ds = train_ds.select(
+                    range(min(self.total_train_samples, len(train_ds)))
+                )
             if self.total_val_samples:
                 val_ds = val_ds.select(range(min(self.total_val_samples, len(val_ds))))
 
@@ -271,7 +264,7 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=self.num_workers,
-            collate_fn=self.collator
+            collate_fn=self.collator,
         )
 
     def val_dataloader(self):
@@ -280,5 +273,5 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
-            collate_fn=self.collator
+            collate_fn=self.collator,
         )

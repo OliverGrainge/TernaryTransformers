@@ -3,6 +3,7 @@ from typing import Tuple, Type, Union, Optional
 import torch
 import torch.nn as nn
 from einops import repeat
+
 # from einops.layers.torch import Rearrange  # not really needed for BERT embeddings
 
 from models.blocks import ViTAttention, ViTFeedForward, TransformerAttention
@@ -14,6 +15,7 @@ class Transformer(nn.Module):
     Reuse your existing Transformer block exactly as you provided.
     (ViTAttention + ViTFeedForward repeated 'depth' times)
     """
+
     def __init__(
         self,
         dim: int,
@@ -57,7 +59,9 @@ class Transformer(nn.Module):
                 )
             )
 
-    def forward(self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         for attn, ff in self.layers:
             x = attn(x, attention_mask=attention_mask) + x
             x = ff(x) + x
@@ -71,6 +75,7 @@ class Bert(nn.Module):
       2) Passes the embedded sequence through a Transformer (ViTAttention + ViTFeedForward).
       3) Returns a final sequence of hidden states [batch_size, seq_len, dim].
     """
+
     def __init__(
         self,
         vocab_size: int = 30522,
@@ -93,9 +98,15 @@ class Bert(nn.Module):
         super().__init__()
 
         # --- Embedding Layers ---
-        self.token_embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=dim)
-        self.position_embedding = nn.Embedding(num_embeddings=max_seq_len, embedding_dim=dim)
-        self.segment_embedding = nn.Embedding(num_embeddings=num_segments, embedding_dim=dim)
+        self.token_embedding = nn.Embedding(
+            num_embeddings=vocab_size, embedding_dim=dim
+        )
+        self.position_embedding = nn.Embedding(
+            num_embeddings=max_seq_len, embedding_dim=dim
+        )
+        self.segment_embedding = nn.Embedding(
+            num_embeddings=num_segments, embedding_dim=dim
+        )
 
         # Dropout after embeddings
         self.embedding_dropout = nn.Dropout(emb_dropout)
@@ -110,8 +121,12 @@ class Bert(nn.Module):
             dropout=dropout,
             attention_norm_layer=LAYERS_REGISTRY[attention_norm_layer.lower()],
             feedforward_norm_layer=LAYERS_REGISTRY[feedforward_norm_layer.lower()],
-            attention_activation_layer=LAYERS_REGISTRY[attention_activation_layer.lower()],
-            feedforward_activation_layer=LAYERS_REGISTRY[feedforward_activation_layer.lower()],
+            attention_activation_layer=LAYERS_REGISTRY[
+                attention_activation_layer.lower()
+            ],
+            feedforward_activation_layer=LAYERS_REGISTRY[
+                feedforward_activation_layer.lower()
+            ],
             attention_linear_layer=LAYERS_REGISTRY[attention_linear_layer.lower()],
             feedforward_linear_layer=LAYERS_REGISTRY[feedforward_linear_layer.lower()],
         )
@@ -142,7 +157,9 @@ class Bert(nn.Module):
 
         if token_type_ids is None:
             # if no segment IDs provided, default to zeros
-            token_type_ids = torch.zeros_like(input_ids, dtype=torch.long, device=input_ids.device)
+            token_type_ids = torch.zeros_like(
+                input_ids, dtype=torch.long, device=input_ids.device
+            )
 
         # Sum of token, position, and segment embeddings
         x = (

@@ -6,3 +6,4 @@ examples/lightning_logs/*
 examples/wandb/*
 examples/data/*
 __pycache__/*
+examples/checkpoints/*

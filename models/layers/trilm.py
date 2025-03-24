@@ -11,18 +11,18 @@ from torch.autograd import Function
 class WeightQuantizer(Function):
     @staticmethod
     def forward(ctx, w):
-        delta = (1e-5 + w.abs().mean())
+        delta = 1e-5 + w.abs().mean()
         scale = 1.0 / delta
         qw = (w * scale).round().clamp_(-1, 1)
-        dqw = delta * qw 
+        dqw = delta * qw
         ctx.save_for_backward(delta)
-        return dqw 
-    
+        return dqw
+
     @staticmethod
     def backward(ctx, grad_output):
-        delta, = ctx.saved_tensors
+        (delta,) = ctx.saved_tensors
         return grad_output.clone()
-    
+
 
 def quant(x: torch.Tensor):
     return WeightQuantizer.apply(x)
@@ -36,4 +36,3 @@ class TriLinear(nn.Linear):
         dqw = quant(self.weight)
         output = F.linear(x, dqw, bias=self.bias)
         return output
-    
