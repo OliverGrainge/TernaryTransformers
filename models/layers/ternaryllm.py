@@ -146,7 +146,7 @@ def quant_group(x: torch.Tensor, alpha: torch.Tensor, gamma: torch.Tensor, group
 
 class TLinearGroup(nn.Linear):
     def __init__(
-        self, in_features: int, out_features: int, bias: bool = True, group_size: int = 32
+        self, in_features: int, out_features: int, bias: bool = True, group_size: int = 64
     ):
         super().__init__(in_features, out_features, bias)
         assert (

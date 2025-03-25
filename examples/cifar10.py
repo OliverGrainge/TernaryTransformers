@@ -28,10 +28,20 @@ def parse_args():
     parser.add_argument('--dropout', type=float, default=0.1, help='Dropout rate')
     parser.add_argument('--emb-dropout', type=float, default=0, help='Embedding dropout rate')
     
+    # layer type arguments
+    parser.add_argument('--embedding-norm', type=str, default='LayerNorm', help='Embedding normalization layer')
+    parser.add_argument('--embedding-linear', type=str, default='Linear', help='Embedding linear layer')
+    parser.add_argument('--attention-linear-layer', type=str, default='tlinear_channel', help='Attention linear layer type')
+    parser.add_argument('--attention-norm-layer', type=str, default='LayerNorm', help='Attention normalization layer')
+    parser.add_argument('--feedforward-linear-layer', type=str, default='tlinear_channel', help='Feedforward linear layer type')
+    parser.add_argument('--feedforward-norm-layer', type=str, default='LayerNorm', help='Feedforward normalization layer')
+    parser.add_argument('--attention-activation-layer', type=str, default='GELU', help='Attention activation layer')
+    parser.add_argument('--feedforward-activation-layer', type=str, default='GELU', help='Feedforward activation layer')
+    
     # Training configuration
     parser.add_argument('--batch-size', type=int, default=64, help='Batch size')
-    parser.add_argument('--max-epochs', type=int, default=10, help='Maximum number of epochs')
-    parser.add_argument('--accelerator', type=str, default=None, help='Accelerator (cpu, gpu, etc.)')
+    parser.add_argument('--max-epochs', type=int, default=100, help='Maximum number of epochs')
+    parser.add_argument('--accelerator', type=str, default="auto", help='Accelerator (cpu, gpu, etc.)')
     parser.add_argument('--project-name', type=str, default='cifar10-classification', help='W&B project name')
     
     return parser.parse_args()
@@ -54,14 +64,14 @@ def main():
             "dim_head": args.dim_head,
             "dropout": args.dropout,
             "emb_dropout": args.emb_dropout,
-            "embedding_norm": "LayerNorm",
-            "embedding_linear": "Linear",
-            "attention_linear_layer": "tlinear_channel",
-            "attention_norm_layer": "LayerNorm",
-            "feedforward_linear_layer": "tlinear_channel",
-            "feedforward_norm_layer": "LayerNorm",
-            "attention_activation_layer": "GELU",
-            "feedforward_activation_layer": "GELU",
+            "embedding_norm": args.embedding_norm,
+            "embedding_linear": args.embedding_linear,
+            "attention_linear_layer": args.attention_linear_layer,
+            "attention_norm_layer": args.attention_norm_layer,
+            "feedforward_linear_layer": args.feedforward_linear_layer,
+            "feedforward_norm_layer": args.feedforward_norm_layer,
+            "attention_activation_layer": args.attention_activation_layer,
+            "feedforward_activation_layer": args.feedforward_activation_layer,
         },
         batch_size=args.batch_size,
     )
