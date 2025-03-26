@@ -4,6 +4,7 @@ import inspect
 
 from models.heads import HEADS_REGISTRY
 from models.transformers import TRANSFORMERS_REGISTRY
+from config import ModelConfig, BackboneConfig, HeadConfig
 
 
 class CustomModel(nn.Module):
@@ -49,34 +50,13 @@ class CustomModel(nn.Module):
 
 
 def create_model(
-    backbone: str, head: str, backbone_kwargs: dict = {}, head_kwargs: dict = {}
+    model_config: ModelConfig,
 ):
-    transformer_cls = TRANSFORMERS_REGISTRY[backbone.lower()]
-    head_cls = HEADS_REGISTRY[head.lower()]
-
-    # Get default arguments for both classes
-    transformer_params = inspect.signature(transformer_cls).parameters
-    head_params = inspect.signature(head_cls).parameters
-
-    # Create dictionaries with default values
-    transformer_defaults = {
-        name: param.default
-        for name, param in transformer_params.items()
-        if param.default is not inspect.Parameter.empty
-    }
-    head_defaults = {
-        name: param.default
-        for name, param in head_params.items()
-        if param.default is not inspect.Parameter.empty
-    }
-
-    # Update defaults with provided kwargs
-    transformer_defaults.update(backbone_kwargs)
-    head_defaults.update(head_kwargs)
+    transformer_cls = TRANSFORMERS_REGISTRY[model_config.backbone.backbone.lower()]
+    head_cls = HEADS_REGISTRY[model_config.head.head.lower()]
 
     # Create model components with all parameters
-    transformer = transformer_cls(**transformer_defaults)
-    head = head_cls(**head_defaults)
+    transformer = transformer_cls(model_config.backbone)
+    head = head_cls(model_config.head)
     model = CustomModel(transformer, head)
-
-    return model, transformer_defaults, head_defaults
+    return model

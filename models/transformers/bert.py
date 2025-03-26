@@ -8,7 +8,7 @@ from einops import repeat
 
 from models.blocks import ViTAttention, ViTFeedForward, TransformerAttention
 from models.layers import LAYERS_REGISTRY
-
+from config import BackboneConfig
 
 class Transformer(nn.Module):
     """
@@ -18,42 +18,31 @@ class Transformer(nn.Module):
 
     def __init__(
         self,
-        dim: int,
-        depth: int,
-        heads: int,
-        dim_head: int,
-        mlp_dim: int,
-        dropout: float = 0.0,
-        attention_norm_layer: Type[nn.LayerNorm] = nn.LayerNorm,
-        feedforward_norm_layer: Type[nn.LayerNorm] = nn.LayerNorm,
-        attention_activation_layer: Type[nn.Module] = nn.GELU,
-        feedforward_activation_layer: Type[nn.Module] = nn.GELU,
-        attention_linear_layer: Type[nn.Linear] = nn.Linear,
-        feedforward_linear_layer: Type[nn.Linear] = nn.Linear,
+        backbone_config: BackboneConfig,
     ) -> None:
         super().__init__()
-        self.norm = nn.LayerNorm(dim)
+        self.norm = nn.LayerNorm(backbone_config.dim)
         self.layers = nn.ModuleList([])
-        for _ in range(depth):
+        for _ in range(backbone_config.depth):
             self.layers.append(
                 nn.ModuleList(
                     [
                         TransformerAttention(
-                            dim,
-                            heads=heads,
-                            dim_head=dim_head,
-                            dropout=dropout,
-                            norm_layer=attention_norm_layer,
-                            activation_layer=attention_activation_layer,
-                            linear_layer=attention_linear_layer,
+                            backbone_config.dim,
+                            heads=backbone_config.heads,
+                            dim_head=backbone_config.dim_head,
+                            dropout=backbone_config.dropout,
+                            norm_layer=LAYERS_REGISTRY[backbone_config.attention_norm_layer],
+                            activation_layer=LAYERS_REGISTRY[backbone_config.attention_activation_layer],
+                            linear_layer=LAYERS_REGISTRY[backbone_config.attention_linear_layer],
                         ),
                         ViTFeedForward(
-                            dim,
-                            mlp_dim,
-                            dropout=dropout,
-                            norm_layer=feedforward_norm_layer,
-                            activation_layer=feedforward_activation_layer,
-                            linear_layer=feedforward_linear_layer,
+                            backbone_config.dim,
+                            backbone_config.ffn_dim,
+                            dropout=backbone_config.dropout,
+                            norm_layer=LAYERS_REGISTRY[backbone_config.feedforward_norm_layer],
+                            activation_layer=LAYERS_REGISTRY[backbone_config.feedforward_activation_layer],
+                            linear_layer=LAYERS_REGISTRY[backbone_config.feedforward_linear_layer],
                         ),
                     ]
                 )
@@ -78,57 +67,42 @@ class Bert(nn.Module):
 
     def __init__(
         self,
-        vocab_size: int = 30522,
-        max_seq_len: int = 512,
-        dim: int = 768,
-        depth: int = 12,
-        heads: int = 12,
-        mlp_dim: int = 3072,
-        dim_head: int = 64,
-        dropout: float = 0.1,
-        emb_dropout: float = 0.1,
-        num_segments: int = 2,  # If you want segment embeddings like in BERT
-        attention_norm_layer: str = "LayerNorm",
-        feedforward_norm_layer: str = "LayerNorm",
-        attention_activation_layer: str = "GELU",
-        feedforward_activation_layer: str = "GELU",
-        attention_linear_layer: str = "Linear",
-        feedforward_linear_layer: str = "Linear",
+        backbone_config: BackboneConfig,
     ) -> None:
         super().__init__()
 
         # --- Embedding Layers ---
         self.token_embedding = nn.Embedding(
-            num_embeddings=vocab_size, embedding_dim=dim
+            num_embeddings=backbone_config.vocab_size, embedding_dim=backbone_config.dim
         )
         self.position_embedding = nn.Embedding(
-            num_embeddings=max_seq_len, embedding_dim=dim
+            num_embeddings=backbone_config.max_seq_len, embedding_dim=backbone_config.dim
         )
         self.segment_embedding = nn.Embedding(
-            num_embeddings=num_segments, embedding_dim=dim
+            num_embeddings=backbone_config.num_segments, embedding_dim=backbone_config.dim
         )
 
         # Dropout after embeddings
-        self.embedding_dropout = nn.Dropout(emb_dropout)
+        self.embedding_dropout = nn.Dropout(backbone_config.emb_dropout)
 
         # --- Transformer ---
         self.transformer = Transformer(
-            dim=dim,
-            depth=depth,
-            heads=heads,
-            dim_head=dim_head,
-            mlp_dim=mlp_dim,
-            dropout=dropout,
-            attention_norm_layer=LAYERS_REGISTRY[attention_norm_layer.lower()],
-            feedforward_norm_layer=LAYERS_REGISTRY[feedforward_norm_layer.lower()],
+            dim=backbone_config.dim,
+            depth=backbone_config.depth,
+            heads=backbone_config.heads,
+            dim_head=backbone_config.dim_head,
+            mlp_dim=backbone_config.mlp_dim,
+            dropout=backbone_config.dropout,
+            attention_norm_layer=LAYERS_REGISTRY[backbone_config.attention_norm_layer.lower()],
+            feedforward_norm_layer=LAYERS_REGISTRY[backbone_config.feedforward_norm_layer.lower()],
             attention_activation_layer=LAYERS_REGISTRY[
-                attention_activation_layer.lower()
+                backbone_config.attention_activation_layer.lower()
             ],
             feedforward_activation_layer=LAYERS_REGISTRY[
-                feedforward_activation_layer.lower()
+                backbone_config.feedforward_activation_layer.lower()
             ],
-            attention_linear_layer=LAYERS_REGISTRY[attention_linear_layer.lower()],
-            feedforward_linear_layer=LAYERS_REGISTRY[feedforward_linear_layer.lower()],
+            attention_linear_layer=LAYERS_REGISTRY[backbone_config.attention_linear_layer.lower()],
+            feedforward_linear_layer=LAYERS_REGISTRY[backbone_config.feedforward_linear_layer.lower()],
         )
 
     def forward(

@@ -1,33 +1,30 @@
 import torch
 import torch.nn as nn
+from config import HeadConfig
 
 
 class ImageClassificationHead(nn.Module):
     def __init__(
         self,
-        num_classes: int,
-        dim: int,
-        mlp_dim: int = 128,
-        num_layers: int = 1,
-        dropout: float = 0.0,
+        head_config: HeadConfig,
     ):
         super().__init__()
 
         # Build MLP layers
         layers = []
-        in_features = dim
+        in_features = head_config.in_dim
 
-        for _ in range(num_layers - 1):
+        for _ in range(head_config.depth - 1):
             layers.extend(
-                [nn.Linear(in_features, mlp_dim), nn.GELU(), nn.Dropout(dropout)]
+                [nn.Linear(in_features, head_config.dim), nn.GELU(), nn.Dropout(head_config.dropout)]
             )
-            in_features = mlp_dim
+            in_features = head_config.dim
 
         layers.extend(
             [
-                nn.Linear(in_features, mlp_dim),
-                nn.Dropout(dropout),
-                nn.Linear(mlp_dim, num_classes),
+                nn.Linear(in_features, head_config.dim),
+                nn.Dropout(head_config.dropout),
+                nn.Linear(head_config.dim, head_config.out_dim),
             ]
         )
 

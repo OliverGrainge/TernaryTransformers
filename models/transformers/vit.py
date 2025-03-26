@@ -7,7 +7,7 @@ from einops.layers.torch import Rearrange
 
 from models.blocks import ViTAttention, ViTFeedForward
 from models.layers import LAYERS_REGISTRY
-
+from config import BackboneConfig
 
 def pair(t: Union[int, Tuple[int, int]]) -> Tuple[int, int]:
     return t if isinstance(t, tuple) else (t, t)
@@ -16,42 +16,31 @@ def pair(t: Union[int, Tuple[int, int]]) -> Tuple[int, int]:
 class Transformer(nn.Module):
     def __init__(
         self,
-        dim: int,
-        depth: int,
-        heads: int,
-        dim_head: int,
-        mlp_dim: int,
-        dropout: float = 0.0,
-        attention_norm_layer: Type[nn.LayerNorm] = nn.LayerNorm,
-        feedforward_norm_layer: Type[nn.LayerNorm] = nn.LayerNorm,
-        attention_activation_layer: Type[nn.Module] = nn.GELU,
-        feedforward_activation_layer: Type[nn.Module] = nn.GELU,
-        attention_linear_layer: Type[nn.Linear] = nn.Linear,
-        feedforward_linear_layer: Type[nn.Linear] = nn.Linear,
+        backbone_config: BackboneConfig,
     ) -> None:
         super().__init__()
-        self.norm = nn.LayerNorm(dim)
+        self.norm = nn.LayerNorm(backbone_config.dim)
         self.layers = nn.ModuleList([])
-        for _ in range(depth):
+        for _ in range(backbone_config.depth):
             self.layers.append(
                 nn.ModuleList(
                     [
                         ViTAttention(
-                            dim,
-                            heads=heads,
-                            dim_head=dim_head,
-                            dropout=dropout,
-                            norm_layer=attention_norm_layer,
-                            activation_layer=attention_activation_layer,
-                            linear_layer=attention_linear_layer,
+                            backbone_config.dim,
+                            heads=backbone_config.heads,
+                            dim_head=backbone_config.dim_head,
+                            dropout=backbone_config.dropout,
+                            norm_layer=LAYERS_REGISTRY[backbone_config.attention_norm_layer],
+                            activation_layer=LAYERS_REGISTRY[backbone_config.attention_activation_layer],
+                            linear_layer=LAYERS_REGISTRY[backbone_config.attention_linear_layer],
                         ),
                         ViTFeedForward(
-                            dim,
-                            mlp_dim,
-                            dropout=dropout,
-                            norm_layer=feedforward_norm_layer,
-                            activation_layer=feedforward_activation_layer,
-                            linear_layer=feedforward_linear_layer,
+                            backbone_config.dim,
+                            backbone_config.ffn_dim,
+                            dropout=backbone_config.dropout,
+                            norm_layer=LAYERS_REGISTRY[backbone_config.feedforward_norm_layer],
+                            activation_layer=LAYERS_REGISTRY[backbone_config.feedforward_activation_layer],
+                            linear_layer=LAYERS_REGISTRY[backbone_config.feedforward_linear_layer],
                         ),
                     ]
                 )
@@ -68,36 +57,19 @@ class Transformer(nn.Module):
 class ViT(nn.Module):
     def __init__(
         self,
-        image_size: Union[int, Tuple[int, int]] = 224,
-        patch_size: Union[int, Tuple[int, int]] = 16,
-        dim: int = 768,
-        depth: int = 12,
-        heads: int = 12,
-        mlp_dim: int = 3072,
-        in_channels: int = 3,
-        dim_head: int = 64,
-        dropout: float = 0.0,
-        emb_dropout: float = 0,
-        embedding_norm: str = "LayerNorm",
-        embedding_linear: str = "Linear",
-        attention_linear_layer: str = "Linear",
-        attention_norm_layer: str = "LayerNorm",
-        feedforward_linear_layer: str = "Linear",
-        feedforward_norm_layer: str = "LayerNorm",
-        attention_activation_layer: str = "GELU",
-        feedforward_activation_layer: str = "GELU",
+        backbone_config: BackboneConfig,
     ) -> None:
         super().__init__()
 
-        image_height, image_width = pair(image_size)
-        patch_height, patch_width = pair(patch_size)
+        image_height, image_width = pair(backbone_config.image_size)
+        patch_height, patch_width = pair(backbone_config.patch_size)
 
         assert (
             image_height % patch_height == 0 and image_width % patch_width == 0
         ), "Image dimensions must be divisible by the patch size."
 
         num_patches = (image_height // patch_height) * (image_width // patch_width)
-        patch_dim = in_channels * patch_height * patch_width
+        patch_dim = backbone_config.in_channels * patch_height * patch_width
 
         self.to_patch_embedding = nn.Sequential(
             Rearrange(
@@ -106,31 +78,25 @@ class ViT(nn.Module):
                 p2=patch_width,
             ),
             nn.LayerNorm(patch_dim),
-            nn.Linear(patch_dim, dim),
-            nn.LayerNorm(dim),
+            nn.Linear(patch_dim, backbone_config.dim),
+            nn.LayerNorm(backbone_config.dim),
         )
 
-        self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, dim))
-        self.cls_token = nn.Parameter(torch.randn(1, 1, dim))
-        self.dropout = nn.Dropout(emb_dropout)
+        self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, backbone_config.dim))
+        self.cls_token = nn.Parameter(torch.randn(1, 1, backbone_config.dim))
+        self.dropout = nn.Dropout(backbone_config.emb_dropout)
 
         self.transformer = Transformer(
-            dim=dim,
-            depth=depth,
-            heads=heads,
-            dim_head=dim_head,
-            mlp_dim=mlp_dim,
-            dropout=dropout,
-            attention_norm_layer=LAYERS_REGISTRY[attention_norm_layer.lower()],
-            feedforward_norm_layer=LAYERS_REGISTRY[feedforward_norm_layer.lower()],
+                backbone_config=backbone_config,
+            feedforward_norm_layer=LAYERS_REGISTRY[backbone_config.feedforward_norm_layer.lower()],
             attention_activation_layer=LAYERS_REGISTRY[
-                attention_activation_layer.lower()
+                backbone_config.attention_activation_layer.lower()
             ],
             feedforward_activation_layer=LAYERS_REGISTRY[
-                feedforward_activation_layer.lower()
+                backbone_config.feedforward_activation_layer.lower()
             ],
-            attention_linear_layer=LAYERS_REGISTRY[attention_linear_layer.lower()],
-            feedforward_linear_layer=LAYERS_REGISTRY[feedforward_linear_layer.lower()],
+            attention_linear_layer=LAYERS_REGISTRY[backbone_config.attention_linear_layer.lower()],
+            feedforward_linear_layer=LAYERS_REGISTRY[backbone_config.feedforward_linear_layer.lower()],
         )
 
     def forward(self, img: torch.Tensor) -> torch.Tensor:
@@ -144,89 +110,7 @@ class ViT(nn.Module):
         return x
 
 
-class ViTSmall(ViT):
-    def __init__(
-        self,
-        image_size: Union[int, Tuple[int, int]] = 224,
-        patch_size: Union[int, Tuple[int, int]] = 16,
-        dim: int = 384,  # smaller embedding dimension
-        depth: int = 8,  # fewer transformer layers
-        heads: int = 6,  # fewer attention heads
-        mlp_dim: int = 1536,  # smaller MLP dimension
-        in_channels: int = 3,
-        dim_head: int = 64,
-        dropout: float = 0.0,
-        emb_dropout: float = 0,
-        embedding_norm: str = "LayerNorm",
-        embedding_linear: str = "Linear",
-        attention_linear_layer: str = "Linear",
-        attention_norm_layer: str = "LayerNorm",
-        feedforward_linear_layer: str = "Linear",
-        feedforward_norm_layer: str = "LayerNorm",
-        attention_activation_layer: str = "GELU",
-        feedforward_activation_layer: str = "GELU",
-    ) -> None:
-        super().__init__(
-            image_size=image_size,
-            patch_size=patch_size,
-            dim=dim,
-            depth=depth,
-            heads=heads,
-            mlp_dim=mlp_dim,
-            in_channels=in_channels,
-            dim_head=dim_head,
-            dropout=dropout,
-            emb_dropout=emb_dropout,
-            embedding_norm=embedding_norm,
-            embedding_linear=embedding_linear,
-            attention_linear_layer=attention_linear_layer,
-            attention_norm_layer=attention_norm_layer,
-            feedforward_linear_layer=feedforward_linear_layer,
-            feedforward_norm_layer=feedforward_norm_layer,
-            attention_activation_layer=attention_activation_layer,
-            feedforward_activation_layer=feedforward_activation_layer,
-        )
 
 
-class MiniViT(ViT):
-    def __init__(
-        self,
-        image_size: Union[int, Tuple[int, int]] = 224,
-        patch_size: Union[int, Tuple[int, int]] = 4,
-        dim: int = 128,  # smaller embedding dimension
-        depth: int = 2,  # fewer transformer layers
-        heads: int = 4,  # fewer attention heads
-        mlp_dim: int = 128 * 3,  # smaller MLP dimension
-        in_channels: int = 1,
-        dim_head: int = 64,
-        dropout: float = 0.1,
-        emb_dropout: float = 0,
-        embedding_norm: str = "LayerNorm",
-        embedding_linear: str = "Linear",
-        attention_linear_layer: str = "Linear",
-        attention_norm_layer: str = "LayerNorm",
-        feedforward_linear_layer: str = "Linear",
-        feedforward_norm_layer: str = "LayerNorm",
-        attention_activation_layer: str = "GELU",
-        feedforward_activation_layer: str = "GELU",
-    ) -> None:
-        super().__init__(
-            image_size=image_size,
-            patch_size=patch_size,
-            dim=dim,
-            depth=depth,
-            heads=heads,
-            mlp_dim=mlp_dim,
-            in_channels=in_channels,
-            dim_head=dim_head,
-            dropout=dropout,
-            emb_dropout=emb_dropout,
-            embedding_norm=embedding_norm,
-            embedding_linear=embedding_linear,
-            attention_linear_layer=attention_linear_layer,
-            attention_norm_layer=attention_norm_layer,
-            feedforward_linear_layer=feedforward_linear_layer,
-            feedforward_norm_layer=feedforward_norm_layer,
-            attention_activation_layer=attention_activation_layer,
-            feedforward_activation_layer=feedforward_activation_layer,
-        )
+
+

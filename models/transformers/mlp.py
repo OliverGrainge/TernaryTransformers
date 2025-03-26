@@ -7,41 +7,35 @@ from einops.layers.torch import Rearrange
 
 from models.blocks import ViTAttention, ViTFeedForward
 from models.layers import LAYERS_REGISTRY
+from config import BackboneConfig
 
 
 class MLP(nn.Module):
     def __init__(
         self,
-        in_dim: int,
-        mlp_dim: int,
-        out_dim: int = 10,
-        num_layers: int = 3,
-        dropout: float = 0.0,
-        linear_layer: str = "Linear",
-        activation_layer: str = "RELU",
-        norm_layer: str = "LayerNorm",
+        backbone_config: BackboneConfig,
     ):
         super().__init__()
-        linear_layer = LAYERS_REGISTRY[linear_layer.lower()]
-        activation_layer = LAYERS_REGISTRY[activation_layer.lower()]
-        norm_layer = LAYERS_REGISTRY[norm_layer.lower()]
+        linear_layer = LAYERS_REGISTRY[backbone_config.feedforward_linear_layer]
+        activation_layer = LAYERS_REGISTRY[backbone_config.feedforward_activation_layer]
+        norm_layer = LAYERS_REGISTRY[backbone_config.feedforward_norm_layer]
 
-        self.norm = norm_layer(in_dim)
+        self.norm = norm_layer(backbone_config.in_dim)
         layers = []
 
         # First layer
-        layers.append(linear_layer(in_dim, mlp_dim))
+        layers.append(linear_layer(backbone_config.in_dim, backbone_config.dim))
         layers.append(activation_layer())
-        layers.append(nn.Dropout(dropout))
+        layers.append(nn.Dropout(backbone_config.dropout))
 
         # Middle layers
-        for _ in range(num_layers - 2):
-            layers.append(linear_layer(mlp_dim, mlp_dim))
+        for _ in range(backbone_config.depth - 2):
+            layers.append(linear_layer(backbone_config.dim, backbone_config.dim))
             layers.append(activation_layer())
-            layers.append(nn.Dropout(dropout))
+            layers.append(nn.Dropout(backbone_config.dropout))
 
         # Final layer
-        layers.append(linear_layer(mlp_dim, out_dim))
+        layers.append(linear_layer(backbone_config.dim, backbone_config.out_dim))
 
         self.layers = nn.Sequential(*layers)
 
