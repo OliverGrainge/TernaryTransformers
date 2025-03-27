@@ -47,8 +47,6 @@ def quant_activation(x: torch.Tensor):
 
 
 class BitLinear(nn.Linear):
-
-
     def __init__(self, in_features: int, out_features: int, bias: bool = True):
         super().__init__(in_features, out_features, bias)
         # RMS normalization applied to the input before quantization

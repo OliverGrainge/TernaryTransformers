@@ -11,7 +11,6 @@ from models.layers import LAYERS_REGISTRY
 # from einops.layers.torch import Rearrange  # not really needed for BERT embeddings
 
 
-
 class Transformer(nn.Module):
     """
     Reuse your existing Transformer block exactly as you provided.
