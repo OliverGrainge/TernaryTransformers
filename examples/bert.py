@@ -19,7 +19,7 @@ class WikiText2BertMLMModelConfig(ModelConfig):
     backbone_type = "Bert"
     head_type = "MLMHead"
     vocab_size = 30522
-    max_seq_len = 512
+    max_seq_len = 128
     num_segments = 2
     transformer_dim = 256
     transformer_depth = 6
@@ -38,95 +38,19 @@ class WikiText2BertMLMModelConfig(ModelConfig):
 
 class WikiText2BertMLMTrainConfig(TrainConfig):
     project_name = "WikiText2-MLM"
-    batch_size = 12
+    batch_size = 48
     learning_rate = 1e-4
-    total_train_samples = 5_000
-    total_val_samples = 1_000
+    total_train_samples = 100_000
+    total_val_samples = 5_000
     tokenizer_name = "bert-base-uncased"
     mlm_probability = 0.15
+    precision = "bf16"
+    num_workers = 4
 
 class WikiText2BertMLMDataConfig(DataConfig):
     data_dir = os.path.join(DataConfig.data_dir, "wikitext")
 
-"""
-def parse_args():
-    parser = argparse.ArgumentParser(description="BERT MLM Training Script")
 
-    # Model configuration
-    parser.add_argument(
-        "--backbone", type=str, default="Bert", help="Backbone architecture"
-    )
-    parser.add_argument("--head", type=str, default="MLMHead", help="Head architecture")
-    parser.add_argument("--vocab-size", type=int, default=30522, help="Vocabulary size")
-    parser.add_argument(
-        "--max-seq-len", type=int, default=512, help="Maximum sequence length"
-    )
-    parser.add_argument("--dim", type=int, default=256, help="Model dimension")
-    parser.add_argument(
-        "--depth", type=int, default=6, help="Number of transformer layers"
-    )
-    parser.add_argument(
-        "--heads", type=int, default=8, help="Number of attention heads"
-    )
-    parser.add_argument("--mlp-dim", type=int, default=1024, help="MLP dimension")
-    parser.add_argument("--dim-head", type=int, default=32, help="Dimension per head")
-    parser.add_argument("--dropout", type=float, default=0.1, help="Dropout rate")
-    parser.add_argument(
-        "--emb-dropout", type=float, default=0.1, help="Embedding dropout rate"
-    )
-    parser.add_argument(
-        "--num-segments", type=int, default=2, help="Number of segments"
-    )
-
-    # Layer types
-    parser.add_argument(
-        "--attention-norm",
-        type=str,
-        default="LayerNorm",
-        help="Attention normalization layer",
-    )
-    parser.add_argument(
-        "--feedforward-norm",
-        type=str,
-        default="LayerNorm",
-        help="Feedforward normalization layer",
-    )
-    parser.add_argument(
-        "--attention-activation",
-        type=str,
-        default="GELU",
-        help="Attention activation layer",
-    )
-    parser.add_argument(
-        "--feedforward-activation",
-        type=str,
-        default="GELU",
-        help="Feedforward activation layer",
-    )
-    parser.add_argument(
-        "--attention-linear", type=str, default="Linear", help="Attention linear layer"
-    )
-    parser.add_argument(
-        "--feedforward-linear",
-        type=str,
-        default="Linear",
-        help="Feedforward linear layer",
-    )
-
-    # Training configuration
-    parser.add_argument("--batch-size", type=int, default=128, help="Batch size")
-    parser.add_argument(
-        "--max-epochs", type=int, default=10, help="Maximum number of epochs"
-    )
-    parser.add_argument(
-        "--accelerator", type=str, default=None, help="Accelerator (cpu, gpu, etc.)"
-    )
-    parser.add_argument(
-        "--project-name", type=str, default="WikiText2-MLM", help="W&B project name"
-    )
-
-    return parser.parse_args()
-"""
 
 def main():
     model_config, train_config, data_config = parse_configs(
@@ -136,6 +60,8 @@ def main():
     )
 
     # Load the dataset first
+    
+    os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
     module = WikiText2BertMLMTrainer(
         model_config=model_config,
@@ -146,6 +72,7 @@ def main():
     trainer = pl.Trainer(
         max_epochs=train_config.max_epochs,
         accelerator=train_config.accelerator,
+        precision=train_config.precision,
         logger=pl.loggers.WandbLogger(
             project=train_config.project_name, name=module.experiment_name
         ),
