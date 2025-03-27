@@ -1,154 +1,91 @@
-import torch
+import argparse
 import os
 import sys
+
+import torch
+
 import wandb
-import argparse
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from trainers import CIFAR10Trainer
 import pytorch_lightning as pl
+from config import DataConfig, ModelConfig, TrainConfig, parse_configs
+from trainers import CIFAR10Trainer
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="CIFAR10 Training Script")
+class CIFAR10ModelConfig(ModelConfig):
+    backbone_type = "ViT"
+    transformer_heads = 4
+    transformer_dim = 128
+    transformer_ffn_dim = 384
+    transformer_depth = 6
+    transformer_dropout = 0.1
+    transformer_dim_head = transformer_dim // transformer_heads
+    image_in_channels = 1
+    image_size = 32
+    image_patch_size = 4
+    embedding_dropout = 0.0
 
-    # Model configuration
-    parser.add_argument(
-        "--backbone", type=str, default="minivit", help="Backbone architecture"
-    )
-    parser.add_argument(
-        "--head", type=str, default="ImageClassificationHead", help="Head architecture"
-    )
-    parser.add_argument("--depth", type=int, default=2, help="Depth of the ViT")
-    parser.add_argument(
-        "--heads", type=int, default=4, help="Number of attention heads"
-    )
-    parser.add_argument(
-        "--mlp-dim", type=int, default=384, help="MLP dimension (128*3)"
-    )
-    parser.add_argument("--dim", type=int, default=128, help="Model dimension")
-    parser.add_argument("--image-size", type=int, default=32, help="Input image size")
-    parser.add_argument("--patch-size", type=int, default=4, help="Patch size")
-    parser.add_argument(
-        "--in-channels", type=int, default=3, help="Number of input channels"
-    )
-    parser.add_argument("--dim-head", type=int, default=64, help="Dimension per head")
-    parser.add_argument("--dropout", type=float, default=0.1, help="Dropout rate")
-    parser.add_argument(
-        "--emb-dropout", type=float, default=0, help="Embedding dropout rate"
-    )
+    embedding_norm_layer = "LayerNorm"
+    embedding_linear_layer = "Linear"
+    attention_linear_layer = "Linear"
+    attention_norm_layer = "LayerNorm"
+    feedforward_linear_layer = "Linear"
+    feedforward_norm_layer = "LayerNorm"
 
-    # layer type arguments
-    parser.add_argument(
-        "--embedding-norm",
-        type=str,
-        default="LayerNorm",
-        help="Embedding normalization layer",
-    )
-    parser.add_argument(
-        "--embedding-linear", type=str, default="Linear", help="Embedding linear layer"
-    )
-    parser.add_argument(
-        "--attention-linear-layer",
-        type=str,
-        default="tlinear_channel",
-        help="Attention linear layer type",
-    )
-    parser.add_argument(
-        "--attention-norm-layer",
-        type=str,
-        default="LayerNorm",
-        help="Attention normalization layer",
-    )
-    parser.add_argument(
-        "--feedforward-linear-layer",
-        type=str,
-        default="tlinear_channel",
-        help="Feedforward linear layer type",
-    )
-    parser.add_argument(
-        "--feedforward-norm-layer",
-        type=str,
-        default="LayerNorm",
-        help="Feedforward normalization layer",
-    )
-    parser.add_argument(
-        "--attention-activation-layer",
-        type=str,
-        default="GELU",
-        help="Attention activation layer",
-    )
-    parser.add_argument(
-        "--feedforward-activation-layer",
-        type=str,
-        default="GELU",
-        help="Feedforward activation layer",
-    )
+    head_type: str = "ImageClassificationHead"
 
-    # Training configuration
-    parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
-    parser.add_argument(
-        "--max-epochs", type=int, default=100, help="Maximum number of epochs"
-    )
-    parser.add_argument(
-        "--accelerator", type=str, default="auto", help="Accelerator (cpu, gpu, etc.)"
-    )
-    parser.add_argument(
-        "--project-name",
-        type=str,
-        default="cifar10-classification",
-        help="W&B project name",
-    )
+    head_in_dim = 128
+    head_out_dim = 10
+    head_dim = 128
+    head_linear_layer = "Linear"
+    head_depth = 1
+    head_dropout = 0.0
 
-    return parser.parse_args()
+
+class CIFAR10TrainConfig(TrainConfig):
+    project_name = "CIFAR10"
+    batch_size = 128
+    max_epochs = 100
+    learning_rate = 0.001
+
+
+
+class CIFAR10DataConfig(DataConfig):
+    checkpoints_dir: str = os.path.join(DataConfig.checkpoints_dir, "cifar10")
 
 
 def main():
-    args = parse_args()
+    model_config, train_config, data_config = parse_configs(
+        CIFAR10ModelConfig, CIFAR10TrainConfig, CIFAR10DataConfig
+    )
+
+    print(model_config)
 
     module = CIFAR10Trainer(
-        backbone=args.backbone,
-        head=args.head,
-        backbone_kwargs={
-            "depth": args.depth,
-            "heads": args.heads,
-            "mlp_dim": args.mlp_dim,
-            "dim": args.dim,
-            "image_size": args.image_size,
-            "patch_size": args.patch_size,
-            "in_channels": args.in_channels,
-            "dim_head": args.dim_head,
-            "dropout": args.dropout,
-            "emb_dropout": args.emb_dropout,
-            "embedding_norm": args.embedding_norm,
-            "embedding_linear": args.embedding_linear,
-            "attention_linear_layer": args.attention_linear_layer,
-            "attention_norm_layer": args.attention_norm_layer,
-            "feedforward_linear_layer": args.feedforward_linear_layer,
-            "feedforward_norm_layer": args.feedforward_norm_layer,
-            "attention_activation_layer": args.attention_activation_layer,
-            "feedforward_activation_layer": args.feedforward_activation_layer,
-        },
-        batch_size=args.batch_size,
+        model_config=model_config,
+        train_config=train_config,
+        data_config=data_config,
     )
 
     trainer = pl.Trainer(
-        max_epochs=args.max_epochs,
-        accelerator=args.accelerator,
+        max_epochs=train_config.max_epochs,
+        accelerator=train_config.accelerator,
         logger=pl.loggers.WandbLogger(
-            project=args.project_name, name=module.experiment_name
+            project=train_config.project_name, name=module.experiment_name
         ),
         callbacks=[
             pl.callbacks.ModelCheckpoint(
-                dirpath="checkpoints/cifar10/",
+                dirpath=CIFAR10DataConfig.checkpoints_dir,
                 filename=f"{module.experiment_name}-{{epoch}}-{{val_loss:.2f}}",
                 save_top_k=1,
                 monitor="val_loss",
                 mode="min",
             )
         ],
+        log_every_n_steps=train_config.log_steps,
+        val_check_interval=train_config.val_check_interval,
     )
 
     trainer.fit(module)

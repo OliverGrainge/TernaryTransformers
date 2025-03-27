@@ -1,36 +1,37 @@
 import torch
 import torch.nn as nn
-from config import HeadConfig
+from config import ModelConfig
 
 
 class ImageClassificationHead(nn.Module):
     def __init__(
         self,
-        head_config: HeadConfig,
+        model_config: ModelConfig,
     ):
         super().__init__()
-
+        self.model_config = model_config
         # Build MLP layers
         layers = []
-        in_features = head_config.in_dim
+        in_features = model_config.head_in_dim
 
-        for _ in range(head_config.depth - 1):
+        for _ in range(model_config.head_depth - 1):
             layers.extend(
-                [nn.Linear(in_features, head_config.dim), nn.GELU(), nn.Dropout(head_config.dropout)]
+                [nn.Linear(in_features, model_config.head_dim), nn.GELU(), nn.Dropout(model_config.head_dropout)]
             )
-            in_features = head_config.dim
+            in_features = model_config.head_dim
 
         layers.extend(
             [
-                nn.Linear(in_features, head_config.dim),
-                nn.Dropout(head_config.dropout),
-                nn.Linear(head_config.dim, head_config.out_dim),
+                nn.Linear(in_features, model_config.head_dim),
+                nn.Dropout(model_config.head_dropout),
+                nn.Linear(model_config.head_dim, model_config.head_out_dim),
             ]
         )
 
         self.mlp = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x[:, 0]
+        if self.model_config.backbone_type.lower() != "mlp":
+            x = x[:, 0]
         x = self.mlp(x)
         return x

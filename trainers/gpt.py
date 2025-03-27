@@ -4,18 +4,24 @@ from torch.utils.data import DataLoader, Dataset
 import requests
 from typing import Optional
 from models.helper import create_model
-
+from config import ModelConfig, TrainConfig, DataConfig, parse_configs
+import os
 
 class CharacterDataset(Dataset):
-    def __init__(self, block_size=64, split="train"):
+    def __init__(self, data_config: DataConfig, block_size=64, split="train"):
+        # Ensure data directory exists
+        data_dir = data_config.data_dir
+        os.makedirs(data_dir, exist_ok=True)
+        
         # Download tiny shakespeare if not already present
+        shakespeare_path = os.path.join(data_dir, "shakespeare.txt")
         url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
         try:
-            with open("shakespeare.txt", "r") as f:
+            with open(shakespeare_path, "r") as f:
                 text = f.read()
         except FileNotFoundError:
             text = requests.get(url).text
-            with open("shakespeare.txt", "w") as f:
+            with open(shakespeare_path, "w") as f:
                 f.write(text)
 
         # Create vocabulary
@@ -45,9 +51,7 @@ class CharacterDataset(Dataset):
         return x, y
 
 
-class TinyShakespeareTrainer(pl.LightningModule):
-    def __init__(
-        self,
+"""
         backbone: str = "CausalTransformer",
         head: str = "projection",
         backbone_kwargs: dict = {
@@ -73,34 +77,36 @@ class TinyShakespeareTrainer(pl.LightningModule):
         batch_size: int = 32,
         block_size: int = 64,
         max_epochs: int = 10,
+"""
+class TinyShakespeareTrainer(pl.LightningModule):
+    def __init__(
+        self,
+        model_config: ModelConfig,
+        train_config: TrainConfig,
+        data_config: DataConfig,
     ):
         super().__init__()
+        self.model_config = model_config
+        self.train_config = train_config
+        self.data_config = data_config
+        self.model = create_model(model_config)
 
-        self.model, backbone_kwargs, head_kwargs = create_model(
-            backbone=backbone,
-            head=head,
-            backbone_kwargs=backbone_kwargs,
-            head_kwargs=head_kwargs,
-        )
+        self.loss_fn = torch.nn.CrossEntropyLoss()
+        self.experiment_name = self.experiment_name(model_config)
+        self.save_configs()
 
+    def experiment_name(self, model_config: ModelConfig):
+        return f"Backbone[{model_config.backbone_type}]-LayerType[{model_config.feedforward_linear_layer}]-Activation[{model_config.feedforward_activation_layer}]"
+
+
+    def save_configs(self):
         hparams = {
-            "backbone": backbone,
-            "head": head,
-            "learning_rate": learning_rate,
-            "num_workers": num_workers,
-            "batch_size": batch_size,
-            "block_size": block_size,
-            **{f"backbone_{k}": v for k, v in backbone_kwargs.items()},
-            **{f"head_{k}": v for k, v in head_kwargs.items()},
-            "max_epochs": max_epochs,
+            **{f"model_{k}": v for k, v in self.model_config.__dict__.items()},
+            **{f"train_{k}": v for k, v in self.train_config.__dict__.items()},
+            **{f"data_{k}": v for k, v in self.data_config.__dict__.items()},
+            'experiment_name': self.experiment_name
         }
         self.save_hyperparameters(hparams)
-
-        self.learning_rate = learning_rate
-        self.num_workers = num_workers
-        self.batch_size = batch_size
-        self.block_size = block_size
-        self.loss_fn = torch.nn.CrossEntropyLoss()
 
     def forward(self, x):
         return self.model(x)
@@ -108,11 +114,9 @@ class TinyShakespeareTrainer(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
-        # Reshape logits to [batch_size * block_size, vocab_size]
         logits = logits.view(-1, logits.size(-1))
         y = y.view(-1)
         loss = self.loss_fn(logits, y)
-
         self.log("train_loss", loss)
         return loss
 
@@ -125,10 +129,10 @@ class TinyShakespeareTrainer(pl.LightningModule):
         self.log("val_loss", loss)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        return torch.optim.Adam(self.model.parameters(), lr=self.train_config.learning_rate)
 
     def train_dataloader(self):
-        dataset = CharacterDataset(block_size=self.block_size, split="train")
+        dataset = CharacterDataset(self.data_config, block_size=self.train_config.block_size, split="train")
         return DataLoader(
             dataset,
             batch_size=self.batch_size,
@@ -137,27 +141,27 @@ class TinyShakespeareTrainer(pl.LightningModule):
         )
 
     def val_dataloader(self):
-        dataset = CharacterDataset(block_size=self.block_size, split="val")
+        dataset = CharacterDataset(self.data_config, block_size=self.train_config.block_size, split="val")
         return DataLoader(
             dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
+            batch_size=self.train_config.batch_size,
+            num_workers=self.train_config.num_workers,
         )
 
     def generate(
-        self, start_text: str, max_tokens: int = 100, temperature: float = 1.0
+        self
     ):
         self.eval()
         with torch.no_grad():
-            dataset = CharacterDataset(block_size=self.block_size)
-            x = torch.tensor([dataset.stoi[c] for c in start_text], dtype=torch.long)
+            dataset = CharacterDataset(self.data_config, block_size=self.train_config.block_size)
+            x = torch.tensor([dataset.stoi[c] for c in self.train_config.start_text], dtype=torch.long)
 
-            generated = list(start_text)
-            for _ in range(max_tokens):
+            generated = list(self.train_config.start_text)
+            for _ in range(self.train_config.max_tokens):
                 # Take last block_size tokens
-                x_cond = x[-self.block_size :]
+                x_cond = x[-self.train_config.block_size :]
                 logits = self(x_cond.unsqueeze(0))[0]
-                logits = logits[-1] / temperature
+                logits = logits[-1] / self.train_config.temperature
                 probs = torch.softmax(logits, dim=-1)
                 next_token = torch.multinomial(probs, num_samples=1)
                 generated.append(dataset.itos[next_token.item()])

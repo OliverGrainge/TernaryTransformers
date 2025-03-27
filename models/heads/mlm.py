@@ -1,18 +1,18 @@
 import torch
 import torch.nn as nn
-from config import HeadConfig
+from config import ModelConfig
 
 class MLMHead(nn.Module):
-    def __init__(self, head_config: HeadConfig):
+    def __init__(self, model_config: ModelConfig):
         super().__init__()
 
         # Build MLP layers
-        in_features = head_config.dim
+        in_features = model_config.head_dim
 
-        self.fc1 = nn.Linear(head_config.dim, head_config.dim)
+        self.fc1 = nn.Linear(model_config.head_dim, model_config.head_dim)
         self.act = nn.GELU()
-        self.ln1 = nn.LayerNorm(head_config.dim)
-        self.fc2 = nn.Linear(head_config.dim, head_config.vocab_size)
+        self.ln1 = nn.LayerNorm(model_config.head_dim)
+        self.fc2 = nn.Linear(model_config.head_dim, model_config.vocab_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.fc1(x)

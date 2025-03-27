@@ -6,7 +6,7 @@ from einops import repeat
 
 from models.blocks import ViTAttention, ViTFeedForward, TransformerAttention
 from models.layers import LAYERS_REGISTRY
-from config import BackboneConfig
+from config import ModelConfig
 
 
 class CausalTransformer(nn.Module):
@@ -17,36 +17,35 @@ class CausalTransformer(nn.Module):
 
     def __init__(
         self,
-        backbone_config: BackboneConfig,
+        model_config: ModelConfig,
     ) -> None:
         super().__init__()
         self.layers = nn.ModuleList([])
-        for _ in range(backbone_config.depth):
+        for _ in range(model_config.transformer_depth):
             self.layers.append(
                 nn.ModuleList(
                     [
                         TransformerAttention(
-                            backbone_config.dim,
-                            heads=backbone_config.heads,
-                            dim_head=backbone_config.dim_head,
-                            dropout=backbone_config.dropout,
-                            is_causal=True,  # This is the key difference from BERT
-                            norm_layer=LAYERS_REGISTRY[backbone_config.attention_norm_layer],
-                            activation_layer=LAYERS_REGISTRY[backbone_config.attention_activation_layer],
-                            linear_layer=LAYERS_REGISTRY[backbone_config.attention_linear_layer],
+                            model_config.transformer_dim,
+                            heads=model_config.transformer_heads,
+                            dim_head=model_config.transformer_dim_head,
+                            dropout=model_config.transformer_dropout,
+                            norm_layer=LAYERS_REGISTRY[model_config.attention_norm_layer.lower()],
+                            activation_layer=LAYERS_REGISTRY[model_config.attention_activation_layer.lower()],
+                            linear_layer=LAYERS_REGISTRY[model_config.attention_linear_layer.lower()],
                         ),
                         ViTFeedForward(
-                            backbone_config.dim,
-                            backbone_config.ffn_dim,
-                            dropout=backbone_config.dropout,
-                            norm_layer=LAYERS_REGISTRY[backbone_config.feedforward_norm_layer],
-                            activation_layer=LAYERS_REGISTRY[backbone_config.feedforward_activation_layer],
-                            linear_layer=LAYERS_REGISTRY[backbone_config.feedforward_linear_layer],
+                            model_config.transformer_dim,
+                            model_config.transformer_ffn_dim,
+                            dropout=model_config.transformer_dropout,
+                            norm_layer=LAYERS_REGISTRY[model_config.feedforward_norm_layer.lower()],
+                            activation_layer=LAYERS_REGISTRY[model_config.feedforward_activation_layer.lower()],
+                            linear_layer=LAYERS_REGISTRY[model_config.feedforward_linear_layer.lower()],
                         ),
                     ]
                 )
             )
-        self.norm = nn.LayerNorm(backbone_config.dim)
+        self.norm = nn.LayerNorm(model_config.transformer_dim)
 
     def forward(
         self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
@@ -67,34 +66,34 @@ class GPT(nn.Module):
 
     def __init__(
         self,
-        backbone_config: BackboneConfig,
+        model_config: ModelConfig,
     ) -> None:
         super().__init__()
 
         # --- Embedding Layers ---
         self.token_embedding = nn.Embedding(
-            num_embeddings=backbone_config.vocab_size, embedding_dim=backbone_config.dim
+            num_embeddings=model_config.vocab_size, embedding_dim=model_config.transformer_dim
         )
         self.position_embedding = nn.Embedding(
-            num_embeddings=backbone_config.max_seq_len, embedding_dim=backbone_config.dim
+            num_embeddings=model_config.max_seq_len, embedding_dim=model_config.transformer_dim
         )
 
         # Dropout after embeddings
-        self.embedding_dropout = nn.Dropout(backbone_config.emb_dropout)
+        self.embedding_dropout = nn.Dropout(model_config.embedding_dropout)
 
         # --- Transformer ---
         self.transformer = CausalTransformer(
-            backbone_config,
-            attention_norm_layer=LAYERS_REGISTRY[backbone_config.attention_norm_layer.lower()],
-            feedforward_norm_layer=LAYERS_REGISTRY[backbone_config.feedforward_norm_layer.lower()],
+            model_config,
+            attention_norm_layer=LAYERS_REGISTRY[model_config.attention_norm_layer.lower()],
+            feedforward_norm_layer=LAYERS_REGISTRY[model_config.feedforward_norm_layer.lower()],
             attention_activation_layer=LAYERS_REGISTRY[
-                backbone_config.attention_activation_layer.lower()
+                model_config.attention_activation_layer.lower()
             ],
             feedforward_activation_layer=LAYERS_REGISTRY[
-                backbone_config.feedforward_activation_layer.lower()
+                model_config.feedforward_activation_layer.lower()
             ],
-            attention_linear_layer=LAYERS_REGISTRY[backbone_config.attention_linear_layer.lower()],
-            feedforward_linear_layer=LAYERS_REGISTRY[backbone_config.feedforward_linear_layer.lower()],
+            attention_linear_layer=LAYERS_REGISTRY[model_config.attention_linear_layer.lower()],
+            feedforward_linear_layer=LAYERS_REGISTRY[model_config.feedforward_linear_layer.lower()],
         )
 
     def forward(

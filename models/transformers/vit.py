@@ -7,7 +7,7 @@ from einops.layers.torch import Rearrange
 
 from models.blocks import ViTAttention, ViTFeedForward
 from models.layers import LAYERS_REGISTRY
-from config import BackboneConfig
+from config import ModelConfig
 
 def pair(t: Union[int, Tuple[int, int]]) -> Tuple[int, int]:
     return t if isinstance(t, tuple) else (t, t)
@@ -16,31 +16,31 @@ def pair(t: Union[int, Tuple[int, int]]) -> Tuple[int, int]:
 class Transformer(nn.Module):
     def __init__(
         self,
-        backbone_config: BackboneConfig,
+        model_config: ModelConfig,
     ) -> None:
         super().__init__()
-        self.norm = nn.LayerNorm(backbone_config.dim)
+        self.norm = nn.LayerNorm(model_config.transformer_dim)
         self.layers = nn.ModuleList([])
-        for _ in range(backbone_config.depth):
+        for _ in range(model_config.transformer_depth):
             self.layers.append(
                 nn.ModuleList(
                     [
                         ViTAttention(
-                            backbone_config.dim,
-                            heads=backbone_config.heads,
-                            dim_head=backbone_config.dim_head,
-                            dropout=backbone_config.dropout,
-                            norm_layer=LAYERS_REGISTRY[backbone_config.attention_norm_layer],
-                            activation_layer=LAYERS_REGISTRY[backbone_config.attention_activation_layer],
-                            linear_layer=LAYERS_REGISTRY[backbone_config.attention_linear_layer],
+                            model_config.transformer_dim,
+                            heads=model_config.transformer_heads,
+                            dim_head=model_config.transformer_dim_head,
+                            dropout=model_config.transformer_dropout,
+                            norm_layer=LAYERS_REGISTRY[model_config.attention_norm_layer.lower()],
+                            activation_layer=LAYERS_REGISTRY[model_config.attention_activation_layer.lower()],
+                            linear_layer=LAYERS_REGISTRY[model_config.attention_linear_layer.lower()],
                         ),
                         ViTFeedForward(
-                            backbone_config.dim,
-                            backbone_config.ffn_dim,
-                            dropout=backbone_config.dropout,
-                            norm_layer=LAYERS_REGISTRY[backbone_config.feedforward_norm_layer],
-                            activation_layer=LAYERS_REGISTRY[backbone_config.feedforward_activation_layer],
-                            linear_layer=LAYERS_REGISTRY[backbone_config.feedforward_linear_layer],
+                            model_config.transformer_dim,
+                            model_config.transformer_ffn_dim,
+                            dropout=model_config.transformer_dropout,
+                            norm_layer=LAYERS_REGISTRY[model_config.feedforward_norm_layer.lower()],
+                            activation_layer=LAYERS_REGISTRY[model_config.feedforward_activation_layer.lower()],
+                            linear_layer=LAYERS_REGISTRY[model_config.feedforward_linear_layer.lower()],
                         ),
                     ]
                 )
@@ -57,19 +57,19 @@ class Transformer(nn.Module):
 class ViT(nn.Module):
     def __init__(
         self,
-        backbone_config: BackboneConfig,
+        model_config: ModelConfig,
     ) -> None:
         super().__init__()
 
-        image_height, image_width = pair(backbone_config.image_size)
-        patch_height, patch_width = pair(backbone_config.patch_size)
+        image_height, image_width = pair(model_config.image_size)
+        patch_height, patch_width = pair(model_config.image_patch_size)
 
         assert (
             image_height % patch_height == 0 and image_width % patch_width == 0
         ), "Image dimensions must be divisible by the patch size."
 
         num_patches = (image_height // patch_height) * (image_width // patch_width)
-        patch_dim = backbone_config.in_channels * patch_height * patch_width
+        patch_dim = model_config.image_channels * patch_height * patch_width
 
         self.to_patch_embedding = nn.Sequential(
             Rearrange(
@@ -78,26 +78,15 @@ class ViT(nn.Module):
                 p2=patch_width,
             ),
             nn.LayerNorm(patch_dim),
-            nn.Linear(patch_dim, backbone_config.dim),
-            nn.LayerNorm(backbone_config.dim),
+            nn.Linear(patch_dim, model_config.transformer_dim),
+            nn.LayerNorm(model_config.transformer_dim),
         )
 
-        self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, backbone_config.dim))
-        self.cls_token = nn.Parameter(torch.randn(1, 1, backbone_config.dim))
-        self.dropout = nn.Dropout(backbone_config.emb_dropout)
+        self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, model_config.transformer_dim))
+        self.cls_token = nn.Parameter(torch.randn(1, 1, model_config.transformer_dim))
+        self.dropout = nn.Dropout(model_config.embedding_dropout)
 
-        self.transformer = Transformer(
-                backbone_config=backbone_config,
-            feedforward_norm_layer=LAYERS_REGISTRY[backbone_config.feedforward_norm_layer.lower()],
-            attention_activation_layer=LAYERS_REGISTRY[
-                backbone_config.attention_activation_layer.lower()
-            ],
-            feedforward_activation_layer=LAYERS_REGISTRY[
-                backbone_config.feedforward_activation_layer.lower()
-            ],
-            attention_linear_layer=LAYERS_REGISTRY[backbone_config.attention_linear_layer.lower()],
-            feedforward_linear_layer=LAYERS_REGISTRY[backbone_config.feedforward_linear_layer.lower()],
-        )
+        self.transformer = Transformer(model_config=model_config)
 
     def forward(self, img: torch.Tensor) -> torch.Tensor:
         x = self.to_patch_embedding(img)

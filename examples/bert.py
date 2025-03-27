@@ -1,15 +1,17 @@
-import torch
+import argparse
 import os
 import sys
-import wandb
+
+import torch
 from datasets import load_dataset
-import argparse
+
+import wandb
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from trainers import WikiText2BertMLMTrainer
 import pytorch_lightning as pl
+from trainers import WikiText2BertMLMTrainer
 
 
 def parse_args():
