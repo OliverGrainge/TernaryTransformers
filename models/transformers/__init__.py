@@ -1,7 +1,7 @@
-from .vit import ViT
-from .mlp import MLP
 from .bert import Bert
-from .gpt import CausalTransformer, GPT
+from .gpt import GPT, CausalTransformer
+from .mlp import MLP
+from .vit import ViT
 
 __all__ = ["ViT", "MiniViT", "ViTSmall", "MLP", "Bert", "CausalTransformer"]
 

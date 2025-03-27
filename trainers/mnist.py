@@ -1,19 +1,21 @@
+from typing import Optional
+
 import pytorch_lightning as pl
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from typing import Optional
-import torch.nn as nn 
+
+from config import DataConfig, ModelConfig, TrainConfig
 from models.helper import create_model
-from config import ModelConfig, TrainConfig, DataConfig
 
 
 class MNISTTrainer(pl.LightningModule):
     def __init__(
         self,
-        model_config: ModelConfig, 
-        train_config: TrainConfig, 
-        data_config: DataConfig
+        model_config: ModelConfig,
+        train_config: TrainConfig,
+        data_config: DataConfig,
     ):
         super().__init__()
         self.model_config = model_config
@@ -31,7 +33,7 @@ class MNISTTrainer(pl.LightningModule):
             **{f"model_{k}": v for k, v in self.model_config.__dict__.items()},
             **{f"train_{k}": v for k, v in self.train_config.__dict__.items()},
             **{f"data_{k}": v for k, v in self.data_config.__dict__.items()},
-            'experiment_name': self.experiment_name
+            "experiment_name": self.experiment_name,
         }
         self.save_hyperparameters(hparams)
 
@@ -60,7 +62,9 @@ class MNISTTrainer(pl.LightningModule):
         self.log("val_acc", acc)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.model.parameters(), lr=self.train_config.learning_rate)
+        return torch.optim.Adam(
+            self.model.parameters(), lr=self.train_config.learning_rate
+        )
 
     def train_dataloader(self):
         transform = transforms.Compose(
@@ -69,7 +73,9 @@ class MNISTTrainer(pl.LightningModule):
                 transforms.Normalize((0.1307,), (0.3081,)),  # MNIST mean and std
             ]
         )
-        dataset = datasets.MNIST(self.data_config.data_dir, train=True, download=True, transform=transform)
+        dataset = datasets.MNIST(
+            self.data_config.data_dir, train=True, download=True, transform=transform
+        )
         return DataLoader(
             dataset,
             batch_size=self.train_config.batch_size,
@@ -88,5 +94,7 @@ class MNISTTrainer(pl.LightningModule):
             self.data_config.data_dir, train=False, download=True, transform=transform
         )
         return DataLoader(
-            dataset, batch_size=self.train_config.batch_size, num_workers=self.train_config.num_workers
+            dataset,
+            batch_size=self.train_config.batch_size,
+            num_workers=self.train_config.num_workers,
         )

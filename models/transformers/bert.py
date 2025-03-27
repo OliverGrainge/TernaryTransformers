@@ -1,14 +1,16 @@
-from typing import Tuple, Type, Union, Optional
+from typing import Optional, Tuple, Type, Union
 
 import torch
 import torch.nn as nn
 from einops import repeat
 
+from config import ModelConfig
+from models.blocks import TransformerAttention, ViTAttention, ViTFeedForward
+from models.layers import LAYERS_REGISTRY
+
 # from einops.layers.torch import Rearrange  # not really needed for BERT embeddings
 
-from models.blocks import ViTAttention, ViTFeedForward, TransformerAttention
-from models.layers import LAYERS_REGISTRY
-from config import ModelConfig
+
 
 class Transformer(nn.Module):
     """
@@ -32,17 +34,29 @@ class Transformer(nn.Module):
                             heads=model_config.transformer_heads,
                             dim_head=model_config.transformer_dim_head,
                             dropout=model_config.transformer_dropout,
-                            norm_layer=LAYERS_REGISTRY[model_config.attention_norm_layer.lower()],
-                            activation_layer=LAYERS_REGISTRY[model_config.attention_activation_layer.lower()],
-                            linear_layer=LAYERS_REGISTRY[model_config.attention_linear_layer.lower()],
+                            norm_layer=LAYERS_REGISTRY[
+                                model_config.attention_norm_layer.lower()
+                            ],
+                            activation_layer=LAYERS_REGISTRY[
+                                model_config.attention_activation_layer.lower()
+                            ],
+                            linear_layer=LAYERS_REGISTRY[
+                                model_config.attention_linear_layer.lower()
+                            ],
                         ),
                         ViTFeedForward(
                             model_config.transformer_dim,
                             model_config.transformer_ffn_dim,
                             dropout=model_config.transformer_dropout,
-                            norm_layer=LAYERS_REGISTRY[model_config.feedforward_norm_layer.lower()],
-                            activation_layer=LAYERS_REGISTRY[model_config.feedforward_activation_layer.lower()],
-                            linear_layer=LAYERS_REGISTRY[model_config.feedforward_linear_layer.lower()],
+                            norm_layer=LAYERS_REGISTRY[
+                                model_config.feedforward_norm_layer.lower()
+                            ],
+                            activation_layer=LAYERS_REGISTRY[
+                                model_config.feedforward_activation_layer.lower()
+                            ],
+                            linear_layer=LAYERS_REGISTRY[
+                                model_config.feedforward_linear_layer.lower()
+                            ],
                         ),
                     ]
                 )
@@ -73,13 +87,16 @@ class Bert(nn.Module):
 
         # --- Embedding Layers ---
         self.token_embedding = nn.Embedding(
-            num_embeddings=model_config.vocab_size, embedding_dim=model_config.transformer_dim
+            num_embeddings=model_config.vocab_size,
+            embedding_dim=model_config.transformer_dim,
         )
         self.position_embedding = nn.Embedding(
-            num_embeddings=model_config.max_seq_len, embedding_dim=model_config.transformer_dim
+            num_embeddings=model_config.max_seq_len,
+            embedding_dim=model_config.transformer_dim,
         )
         self.segment_embedding = nn.Embedding(
-            num_embeddings=model_config.num_segments, embedding_dim=model_config.transformer_dim
+            num_embeddings=model_config.num_segments,
+            embedding_dim=model_config.transformer_dim,
         )
 
         # Dropout after embeddings

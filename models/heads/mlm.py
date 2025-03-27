@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
+
 from config import ModelConfig
+
 
 class MLMHead(nn.Module):
     def __init__(self, model_config: ModelConfig):

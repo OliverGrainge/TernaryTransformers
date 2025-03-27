@@ -1,6 +1,7 @@
 import pytest
-from models.layers import LINEAR_REGISTRY
 import torch
+
+from models.layers import LINEAR_REGISTRY
 
 
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())

@@ -3,13 +3,13 @@ import os
 import sys
 
 import torch
-
 import wandb
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytorch_lightning as pl
+
 from config import DataConfig, ModelConfig, TrainConfig, parse_configs
 from trainers import CIFAR10Trainer
 
@@ -35,7 +35,6 @@ class CIFAR10ModelConfig(ModelConfig):
     feedforward_norm_layer = "LayerNorm"
 
     head_type: str = "ImageClassificationHead"
-
     head_in_dim = 128
     head_out_dim = 10
     head_dim = 128
@@ -49,7 +48,6 @@ class CIFAR10TrainConfig(TrainConfig):
     batch_size = 128
     max_epochs = 100
     learning_rate = 0.001
-
 
 
 class CIFAR10DataConfig(DataConfig):

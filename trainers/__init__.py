@@ -1,6 +1,6 @@
-from .mnist import MNISTTrainer
-from .cifar10 import CIFAR10Trainer
+from .autolm import TinyShakespeareTrainer
 from .bert import WikiText2BertMLMTrainer
-from .gpt import TinyShakespeareTrainer
+from .cifar10 import CIFAR10Trainer
+from .mnist import MNISTTrainer
 
-__all__ = ["MNISTTrainer", "CIFAR10Trainer", "WikiText2BertMLMTrainer"]
+__all__ = ["MNISTTrainer", "CIFAR10Trainer", "BertMLMTrainer", "AutoLMTrainer"]

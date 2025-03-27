@@ -52,13 +52,6 @@ class TLinear(nn.Linear):
         return output
 
 
-
-
-
-
-
-
-
 class WeightQuantizerChannel(Function):
     @staticmethod
     def forward(ctx, w, alpha, gamma):
@@ -105,11 +98,6 @@ class TLinearChannel(nn.Linear):
         return output
 
 
-
-
-
-
-
 class WeightQuantizerGroup(Function):
     @staticmethod
     def forward(ctx, w, alpha, gamma, group_size):
@@ -140,19 +128,25 @@ class WeightQuantizerGroup(Function):
         return grad_w, grad_alpha, grad_gamma, None
 
 
-def quant_group(x: torch.Tensor, alpha: torch.Tensor, gamma: torch.Tensor, group_size: int):
+def quant_group(
+    x: torch.Tensor, alpha: torch.Tensor, gamma: torch.Tensor, group_size: int
+):
     return WeightQuantizerGroup.apply(x, alpha, gamma, group_size)
 
 
 class TLinearGroup(nn.Linear):
     def __init__(
-        self, in_features: int, out_features: int, bias: bool = True, group_size: int = 64
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        group_size: int = 64,
     ):
         super().__init__(in_features, out_features, bias)
         assert (
             out_features % group_size == 0
         ), "out_features must be divisible by group_size"
-    
+
         self.alpha = nn.Parameter(
             torch.zeros(out_features * (in_features // group_size))
         )
@@ -161,7 +155,6 @@ class TLinearGroup(nn.Linear):
         )
         self.group_size = torch.tensor([group_size])
         self._init_scales()
-
 
     def _init_scales(self):
         delta = (

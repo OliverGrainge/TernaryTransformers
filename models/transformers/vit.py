@@ -5,9 +5,10 @@ import torch.nn as nn
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
+from config import ModelConfig
 from models.blocks import ViTAttention, ViTFeedForward
 from models.layers import LAYERS_REGISTRY
-from config import ModelConfig
+
 
 def pair(t: Union[int, Tuple[int, int]]) -> Tuple[int, int]:
     return t if isinstance(t, tuple) else (t, t)
@@ -30,17 +31,29 @@ class Transformer(nn.Module):
                             heads=model_config.transformer_heads,
                             dim_head=model_config.transformer_dim_head,
                             dropout=model_config.transformer_dropout,
-                            norm_layer=LAYERS_REGISTRY[model_config.attention_norm_layer.lower()],
-                            activation_layer=LAYERS_REGISTRY[model_config.attention_activation_layer.lower()],
-                            linear_layer=LAYERS_REGISTRY[model_config.attention_linear_layer.lower()],
+                            norm_layer=LAYERS_REGISTRY[
+                                model_config.attention_norm_layer.lower()
+                            ],
+                            activation_layer=LAYERS_REGISTRY[
+                                model_config.attention_activation_layer.lower()
+                            ],
+                            linear_layer=LAYERS_REGISTRY[
+                                model_config.attention_linear_layer.lower()
+                            ],
                         ),
                         ViTFeedForward(
                             model_config.transformer_dim,
                             model_config.transformer_ffn_dim,
                             dropout=model_config.transformer_dropout,
-                            norm_layer=LAYERS_REGISTRY[model_config.feedforward_norm_layer.lower()],
-                            activation_layer=LAYERS_REGISTRY[model_config.feedforward_activation_layer.lower()],
-                            linear_layer=LAYERS_REGISTRY[model_config.feedforward_linear_layer.lower()],
+                            norm_layer=LAYERS_REGISTRY[
+                                model_config.feedforward_norm_layer.lower()
+                            ],
+                            activation_layer=LAYERS_REGISTRY[
+                                model_config.feedforward_activation_layer.lower()
+                            ],
+                            linear_layer=LAYERS_REGISTRY[
+                                model_config.feedforward_linear_layer.lower()
+                            ],
                         ),
                     ]
                 )
@@ -82,7 +95,9 @@ class ViT(nn.Module):
             nn.LayerNorm(model_config.transformer_dim),
         )
 
-        self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, model_config.transformer_dim))
+        self.pos_embedding = nn.Parameter(
+            torch.randn(1, num_patches + 1, model_config.transformer_dim)
+        )
         self.cls_token = nn.Parameter(torch.randn(1, 1, model_config.transformer_dim))
         self.dropout = nn.Dropout(model_config.embedding_dropout)
 
@@ -97,9 +112,3 @@ class ViT(nn.Module):
         x = self.dropout(x)
         x = self.transformer(x)
         return x
-
-
-
-
-
-

@@ -3,13 +3,13 @@ import os
 import sys
 
 import torch
-
 import wandb
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytorch_lightning as pl
+
 from config import DataConfig, ModelConfig, TrainConfig, parse_configs
 from trainers import MNISTTrainer
 

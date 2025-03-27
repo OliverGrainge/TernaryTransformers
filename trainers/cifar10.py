@@ -1,18 +1,21 @@
+from typing import Optional
+
 import pytorch_lightning as pl
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from typing import Optional
+
+from config import DataConfig, ModelConfig, TrainConfig
 from models.helper import create_model
-from config import ModelConfig, TrainConfig, DataConfig
-import torch.nn as nn
+
 
 class CIFAR10Trainer(pl.LightningModule):
     def __init__(
         self,
         model_config: ModelConfig,
         train_config: TrainConfig,
-        data_config: DataConfig
+        data_config: DataConfig,
     ):
         super().__init__()
         self.model_config = model_config
@@ -23,7 +26,6 @@ class CIFAR10Trainer(pl.LightningModule):
         self.experiment_name = self.experiment_name(model_config)
         self.save_configs()
 
-        
     def experiment_name(self, model_config: ModelConfig):
         return f"Backbone[{model_config.backbone_type}]-LayerType[{model_config.feedforward_linear_layer}]-Activation[{model_config.feedforward_activation_layer}]"
 
@@ -32,13 +34,13 @@ class CIFAR10Trainer(pl.LightningModule):
             **{f"model_{k}": v for k, v in self.model_config.__dict__.items()},
             **{f"train_{k}": v for k, v in self.train_config.__dict__.items()},
             **{f"data_{k}": v for k, v in self.data_config.__dict__.items()},
-            'experiment_name': self.experiment_name
+            "experiment_name": self.experiment_name,
         }
         self.save_hyperparameters(hparams)
-        
+
     def forward(self, x):
         return self.model(x)
-    
+
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
@@ -57,7 +59,9 @@ class CIFAR10Trainer(pl.LightningModule):
         self.log("val_acc", acc)
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.model.parameters(), lr=self.train_config.learning_rate)
+        return torch.optim.Adam(
+            self.model.parameters(), lr=self.train_config.learning_rate
+        )
 
     def train_dataloader(self):
         transform = transforms.Compose(
@@ -93,5 +97,7 @@ class CIFAR10Trainer(pl.LightningModule):
             self.data_config.data_dir, train=False, download=True, transform=transform
         )
         return DataLoader(
-            dataset, batch_size=self.train_config.batch_size, num_workers=self.train_config.num_workers
+            dataset,
+            batch_size=self.train_config.batch_size,
+            num_workers=self.train_config.num_workers,
         )

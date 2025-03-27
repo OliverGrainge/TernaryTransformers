@@ -1,55 +1,19 @@
+from typing import Optional
+
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
 from datasets import load_dataset
+from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, DataCollatorForLanguageModeling
-from typing import Optional
 
+from config import DataConfig, ModelConfig, TrainConfig, parse_configs
 # Suppose you have a create_model function that returns (model, backbone_kwargs, head_kwargs)
 # from your codebase
 from models.helper import create_model
-from config import ModelConfig, TrainConfig, DataConfig, parse_configs
-"""
-        # Model factory arguments
-        backbone: str = "Bert",
-        head: str = "mlmhead",
-        backbone_kwargs: dict = {
-            "vocab_size": 30522,
-            "max_seq_len": 512,
-            "dim": 768,
-            "depth": 12,
-            "heads": 12,
-            "mlp_dim": 3072,
-            "dim_head": 64,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-            "num_segments": 2,
-            "attention_norm_layer": "LayerNorm",
-            "feedforward_norm_layer": "LayerNorm",
-            "attention_activation_layer": "GELU",
-            "feedforward_activation_layer": "GELU",
-            "attention_linear_layer": "Linear",
-            "feedforward_linear_layer": "Linear",
-        },
-        head_kwargs: dict = {"dim": 768, "vocab_size": 30522},
-        # Data args
-        tokenizer_name: str = "bert-base-uncased",
-        dataset_name: str = "wikitext",
-        dataset_config: str = "wikitext-2-raw-v1",
-        mlm_probability: float = 0.15,
-        batch_size: int = 16,
-        num_workers: int = 0,
-        # Optimizer args
-        learning_rate: float = 1e-4,
-        # Others you might want to track
-        max_seq_len: int = 128,
-        total_train_samples: int = 20_000,  # For smaller debug runs
-        total_val_samples: int = 1_000,
-        **extra_kwargs,
-"""
 
-class WikiText2BertMLMTrainer(pl.LightningModule):
+
+class BertMLMTrainer(pl.LightningModule):
     """
     A single PyTorch Lightning class that:
       - Uses a 'backbone' + 'head' via create_model(...)
@@ -75,7 +39,9 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.train_config.tokenizer_name)
         self.collator = DataCollatorForLanguageModeling(
-            tokenizer=self.tokenizer, mlm=True, mlm_probability=self.train_config.mlm_probability
+            tokenizer=self.tokenizer,
+            mlm=True,
+            mlm_probability=self.train_config.mlm_probability,
         )
         self.train_dataset = None
         self.val_dataset = None
@@ -159,7 +125,9 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         """
         Called once. Download the dataset here (only if not present).
         """
-        load_dataset("wikitext", "wikitext-2-raw-v1", cache_dir=self.data_config.data_dir)
+        load_dataset(
+            "wikitext", "wikitext-2-raw-v1", cache_dir=self.data_config.data_dir
+        )
         AutoTokenizer.from_pretrained(self.train_config.tokenizer_name)
 
     def setup(self, stage: Optional[str] = None):
@@ -167,7 +135,9 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         Called on each GPU/process. Create the dataset splits, tokenize, etc.
         """
         if stage == "fit" or stage is None:
-            raw_datasets = load_dataset("wikitext", "wikitext-2-raw-v1", cache_dir=self.data_config.data_dir)
+            raw_datasets = load_dataset(
+                "wikitext", "wikitext-2-raw-v1", cache_dir=self.data_config.data_dir
+            )
 
             def tokenize_function(examples):
                 return self.tokenizer(
@@ -194,7 +164,9 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
                     range(min(self.train_config.total_train_samples, len(train_ds)))
                 )
             if self.train_config.total_val_samples:
-                val_ds = val_ds.select(range(min(self.train_config.total_val_samples, len(val_ds))))
+                val_ds = val_ds.select(
+                    range(min(self.train_config.total_val_samples, len(val_ds)))
+                )
 
             # Convert to PyTorch
             train_ds.set_format(type="torch")

@@ -5,9 +5,9 @@ import torch.nn as nn
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
+from config import ModelConfig
 from models.blocks import ViTAttention, ViTFeedForward
 from models.layers import LAYERS_REGISTRY
-from config import ModelConfig
 
 
 class MLP(nn.Module):
@@ -37,7 +37,7 @@ class MLP(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        
+
         x = self.norm(x)
         x = self.layers(x)
         return x

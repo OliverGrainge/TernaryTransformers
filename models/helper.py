@@ -1,10 +1,11 @@
-import torch
-import torch.nn as nn
 import inspect
 
+import torch
+import torch.nn as nn
+
+from config import ModelConfig
 from models.heads import HEADS_REGISTRY
 from models.transformers import TRANSFORMERS_REGISTRY
-from config import ModelConfig
 
 
 class Model(nn.Module):
@@ -16,7 +17,7 @@ class Model(nn.Module):
     def forward(self, x, **kwargs):
         transformer_output = self.transformer(x, **kwargs)
         return self.head(transformer_output)
-    
+
 
 def create_model(
     model_config: ModelConfig,

@@ -4,7 +4,6 @@ from .bitlinear import BitLinear
 from .ternaryllm import TLinear, TLinearChannel, TLinearGroup
 from .trilm import TriLinear
 
-
 __all__ = [
     "BitLinear",
     "TLinear",

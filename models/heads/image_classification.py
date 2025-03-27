@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+
 from config import ModelConfig
 
 
@@ -16,7 +17,11 @@ class ImageClassificationHead(nn.Module):
 
         for _ in range(model_config.head_depth - 1):
             layers.extend(
-                [nn.Linear(in_features, model_config.head_dim), nn.GELU(), nn.Dropout(model_config.head_dropout)]
+                [
+                    nn.Linear(in_features, model_config.head_dim),
+                    nn.GELU(),
+                    nn.Dropout(model_config.head_dropout),
+                ]
             )
             in_features = model_config.head_dim
 
