@@ -32,17 +32,17 @@ class Transformer(nn.Module):
                             heads=model_config.transformer_heads,
                             dim_head=model_config.transformer_dim_head,
                             dropout=model_config.transformer_dropout,
-                            norm_layer=LAYERS_REGISTRY[model_config.attention_norm_layer],
-                            activation_layer=LAYERS_REGISTRY[model_config.attention_activation_layer],
-                            linear_layer=LAYERS_REGISTRY[model_config.attention_linear_layer],
+                            norm_layer=LAYERS_REGISTRY[model_config.attention_norm_layer.lower()],
+                            activation_layer=LAYERS_REGISTRY[model_config.attention_activation_layer.lower()],
+                            linear_layer=LAYERS_REGISTRY[model_config.attention_linear_layer.lower()],
                         ),
                         ViTFeedForward(
                             model_config.transformer_dim,
                             model_config.transformer_ffn_dim,
                             dropout=model_config.transformer_dropout,
-                            norm_layer=LAYERS_REGISTRY[model_config.feedforward_norm_layer],
-                            activation_layer=LAYERS_REGISTRY[model_config.feedforward_activation_layer],
-                            linear_layer=LAYERS_REGISTRY[model_config.feedforward_linear_layer],
+                            norm_layer=LAYERS_REGISTRY[model_config.feedforward_norm_layer.lower()],
+                            activation_layer=LAYERS_REGISTRY[model_config.feedforward_activation_layer.lower()],
+                            linear_layer=LAYERS_REGISTRY[model_config.feedforward_linear_layer.lower()],
                         ),
                     ]
                 )

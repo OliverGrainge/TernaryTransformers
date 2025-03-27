@@ -16,7 +16,7 @@ from config import ModelConfig, TrainConfig, DataConfig, parse_configs
 
 
 class TinyShakespeareModelConfig(ModelConfig):
-    backbone_type = "CausalTransformer"
+    backbone_type = "gpt"
     vocab_size = 65 
     max_seq_len = 64
     transformer_dim = 384
@@ -36,6 +36,10 @@ class TinyShakespeareModelConfig(ModelConfig):
     feedforward_activation_layer = "GELU"
 
     head_type = "ProjectionHead"
+    head_dim = transformer_dim
+    head_linear_layer = "Linear"
+    head_in_dim = transformer_dim 
+    head_out_dim = vocab_size
 
 
 class TinyShakespeareTrainConfig(TrainConfig):
@@ -47,11 +51,11 @@ class TinyShakespeareTrainConfig(TrainConfig):
 
     start_text = "O Romeo, Romeo, "
     max_tokens = 100
+    val_check_interval = 1.0
     temperature = 0.8
 
 class TinyShakespeareDataConfig(DataConfig):
     checkpoints_dir: str = os.path.join(DataConfig.checkpoints_dir, "tiny_shakespeare")
-
 
 
 
@@ -77,20 +81,11 @@ def main():
                 mode="min",
             )
         ],
+        val_check_interval=train_config.val_check_interval,
     )
 
     trainer.fit(module)
 
-
-    # Test the model after training
-    model = module.eval()
-    sample_text = model.generate(
-        start_text=train_config.start_text,
-        max_tokens=train_config.max_tokens,
-        temperature=train_config.temperature,
-    )
-    print("\nGenerated text:")
-    print(sample_text)
 
 
 if __name__ == "__main__":

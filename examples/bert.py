@@ -12,8 +12,43 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytorch_lightning as pl
 from trainers import WikiText2BertMLMTrainer
+from config import ModelConfig, TrainConfig, DataConfig, parse_configs
 
 
+class WikiText2BertMLMModelConfig(ModelConfig):
+    backbone_type = "Bert"
+    head_type = "MLMHead"
+    vocab_size = 30522
+    max_seq_len = 512
+    num_segments = 2
+    transformer_dim = 256
+    transformer_depth = 6
+    transformer_heads = 8
+    transformer_mlp_dim = 1024
+    transformer_dim_head = transformer_dim // transformer_heads
+    transformer_dropout = 0.1
+    transformer_emb_dropout = 0.1
+    transformer_num_segments = 2
+    transformer_attention_norm_layer = "LayerNorm"
+    transformer_feedforward_norm_layer = "LayerNorm"
+    transformer_attention_activation_layer = "GELU"
+    transformer_feedforward_activation_layer = "GELU"
+    transformer_attention_linear_layer = "Linear"
+    transformer_feedforward_linear_layer = "Linear"
+
+class WikiText2BertMLMTrainConfig(TrainConfig):
+    project_name = "WikiText2-MLM"
+    batch_size = 12
+    learning_rate = 1e-4
+    total_train_samples = 5_000
+    total_val_samples = 1_000
+    tokenizer_name = "bert-base-uncased"
+    mlm_probability = 0.15
+
+class WikiText2BertMLMDataConfig(DataConfig):
+    data_dir = os.path.join(DataConfig.data_dir, "wikitext")
+
+"""
 def parse_args():
     parser = argparse.ArgumentParser(description="BERT MLM Training Script")
 
@@ -91,49 +126,28 @@ def parse_args():
     )
 
     return parser.parse_args()
-
+"""
 
 def main():
-    args = parse_args()
+    model_config, train_config, data_config = parse_configs(
+        WikiText2BertMLMModelConfig,
+        WikiText2BertMLMTrainConfig,
+        WikiText2BertMLMDataConfig,
+    )
 
     # Load the dataset first
-    try:
-        dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
-    except Exception as e:
-        print("Error loading dataset. Trying with force_download=True...")
-        dataset = load_dataset("wikitext", "wikitext-2-raw-v1", force_download=True)
 
     module = WikiText2BertMLMTrainer(
-        backbone=args.backbone,
-        head=args.head,
-        backbone_kwargs={
-            "vocab_size": args.vocab_size,
-            "max_seq_len": args.max_seq_len,
-            "dim": args.dim,
-            "depth": args.depth,
-            "heads": args.heads,
-            "mlp_dim": args.mlp_dim,
-            "dim_head": args.dim_head,
-            "dropout": args.dropout,
-            "emb_dropout": args.emb_dropout,
-            "num_segments": args.num_segments,
-            "attention_norm_layer": args.attention_norm,
-            "feedforward_norm_layer": args.feedforward_norm,
-            "attention_activation_layer": args.attention_activation,
-            "feedforward_activation_layer": args.feedforward_activation,
-            "attention_linear_layer": args.attention_linear,
-            "feedforward_linear_layer": args.feedforward_linear,
-        },
-        head_kwargs={"dim": args.dim, "vocab_size": args.vocab_size},
-        batch_size=args.batch_size,
-        dataset=dataset,
+        model_config=model_config,
+        train_config=train_config,
+        data_config=data_config,
     )
 
     trainer = pl.Trainer(
-        max_epochs=args.max_epochs,
-        accelerator=args.accelerator,
+        max_epochs=train_config.max_epochs,
+        accelerator=train_config.accelerator,
         logger=pl.loggers.WandbLogger(
-            project=args.project_name, name=module.experiment_name
+            project=train_config.project_name, name=module.experiment_name
         ),
         callbacks=[
             pl.callbacks.ModelCheckpoint(

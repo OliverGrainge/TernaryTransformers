@@ -6,6 +6,7 @@ from typing import Optional
 from models.helper import create_model
 from config import ModelConfig, TrainConfig, DataConfig, parse_configs
 import os
+import pandas as pd 
 
 class CharacterDataset(Dataset):
     def __init__(self, data_config: DataConfig, block_size=64, split="train"):
@@ -51,33 +52,6 @@ class CharacterDataset(Dataset):
         return x, y
 
 
-"""
-        backbone: str = "CausalTransformer",
-        head: str = "projection",
-        backbone_kwargs: dict = {
-            "vocab_size": 50257,  # Default GPT-2 vocabulary size
-            "max_seq_len": 1024,
-            "dim": 768,
-            "depth": 12,
-            "heads": 12,
-            "mlp_dim": 3072,
-            "dim_head": 64,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-            "attention_norm_layer": "LayerNorm",
-            "feedforward_norm_layer": "LayerNorm",
-            "attention_activation_layer": "GELU",
-            "feedforward_activation_layer": "GELU",
-            "attention_linear_layer": "Linear",
-            "feedforward_linear_layer": "Linear",
-        },
-        head_kwargs: dict = {"in_dim": 768, "out_dim": 50257},
-        learning_rate: float = 1e-3,
-        num_workers: int = 0,
-        batch_size: int = 32,
-        block_size: int = 64,
-        max_epochs: int = 10,
-"""
 class TinyShakespeareTrainer(pl.LightningModule):
     def __init__(
         self,
@@ -135,9 +109,9 @@ class TinyShakespeareTrainer(pl.LightningModule):
         dataset = CharacterDataset(self.data_config, block_size=self.train_config.block_size, split="train")
         return DataLoader(
             dataset,
-            batch_size=self.batch_size,
+            batch_size=self.train_config.batch_size,
             shuffle=True,
-            num_workers=self.num_workers,
+            num_workers=self.train_config.num_workers,
         )
 
     def val_dataloader(self):
@@ -147,24 +121,4 @@ class TinyShakespeareTrainer(pl.LightningModule):
             batch_size=self.train_config.batch_size,
             num_workers=self.train_config.num_workers,
         )
-
-    def generate(
-        self
-    ):
-        self.eval()
-        with torch.no_grad():
-            dataset = CharacterDataset(self.data_config, block_size=self.train_config.block_size)
-            x = torch.tensor([dataset.stoi[c] for c in self.train_config.start_text], dtype=torch.long)
-
-            generated = list(self.train_config.start_text)
-            for _ in range(self.train_config.max_tokens):
-                # Take last block_size tokens
-                x_cond = x[-self.train_config.block_size :]
-                logits = self(x_cond.unsqueeze(0))[0]
-                logits = logits[-1] / self.train_config.temperature
-                probs = torch.softmax(logits, dim=-1)
-                next_token = torch.multinomial(probs, num_samples=1)
-                generated.append(dataset.itos[next_token.item()])
-                x = torch.cat([x, next_token])
-
-        return "".join(generated)
+    

@@ -19,6 +19,7 @@ class CausalTransformer(nn.Module):
         self,
         model_config: ModelConfig,
     ) -> None:
+        
         super().__init__()
         self.layers = nn.ModuleList([])
         for _ in range(model_config.transformer_depth):
@@ -72,10 +73,12 @@ class GPT(nn.Module):
 
         # --- Embedding Layers ---
         self.token_embedding = nn.Embedding(
-            num_embeddings=model_config.vocab_size, embedding_dim=model_config.transformer_dim
+            num_embeddings=model_config.vocab_size, 
+            embedding_dim=model_config.transformer_dim  # This creates embeddings of correct size
         )
         self.position_embedding = nn.Embedding(
-            num_embeddings=model_config.max_seq_len, embedding_dim=model_config.transformer_dim
+            num_embeddings=model_config.max_seq_len, 
+            embedding_dim=model_config.transformer_dim
         )
 
         # Dropout after embeddings
@@ -84,16 +87,6 @@ class GPT(nn.Module):
         # --- Transformer ---
         self.transformer = CausalTransformer(
             model_config,
-            attention_norm_layer=LAYERS_REGISTRY[model_config.attention_norm_layer.lower()],
-            feedforward_norm_layer=LAYERS_REGISTRY[model_config.feedforward_norm_layer.lower()],
-            attention_activation_layer=LAYERS_REGISTRY[
-                model_config.attention_activation_layer.lower()
-            ],
-            feedforward_activation_layer=LAYERS_REGISTRY[
-                model_config.feedforward_activation_layer.lower()
-            ],
-            attention_linear_layer=LAYERS_REGISTRY[model_config.attention_linear_layer.lower()],
-            feedforward_linear_layer=LAYERS_REGISTRY[model_config.feedforward_linear_layer.lower()],
         )
 
     def forward(

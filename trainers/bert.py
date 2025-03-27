@@ -9,19 +9,8 @@ from typing import Optional
 # Suppose you have a create_model function that returns (model, backbone_kwargs, head_kwargs)
 # from your codebase
 from models.helper import create_model
-
-
-class WikiText2BertMLMTrainer(pl.LightningModule):
-    """
-    A single PyTorch Lightning class that:
-      - Uses a 'backbone' + 'head' via create_model(...)
-      - Downloads and preprocesses WikiText-2
-      - Trains via Masked Language Modeling
-      - Provides train/val DataLoaders
-    """
-
-    def __init__(
-        self,
+from config import ModelConfig, TrainConfig, DataConfig, parse_configs
+"""
         # Model factory arguments
         backbone: str = "Bert",
         head: str = "mlmhead",
@@ -58,85 +47,43 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         total_train_samples: int = 20_000,  # For smaller debug runs
         total_val_samples: int = 1_000,
         **extra_kwargs,
+"""
+
+class WikiText2BertMLMTrainer(pl.LightningModule):
+    """
+    A single PyTorch Lightning class that:
+      - Uses a 'backbone' + 'head' via create_model(...)
+      - Downloads and preprocesses WikiText-2
+      - Trains via Masked Language Modeling
+      - Provides train/val DataLoaders
+    """
+
+    def __init__(
+        self,
+        model_config: ModelConfig,
+        train_config: TrainConfig,
+        data_config: DataConfig,
     ):
-        """
-        Args:
-            backbone, head: Names used in `create_model(...)`.
-            backbone_kwargs, head_kwargs: Dicts with the config for the backbone/head.
-            tokenizer_name: HF tokenizer.
-            dataset_name, dataset_config: HF dataset info (like "wikitext", "wikitext-2-raw-v1").
-            mlm_probability: Fraction of tokens to mask for MLM.
-            batch_size, num_workers: Dataloader config.
-            learning_rate: LR for Adam.
-            max_seq_len: Maximum sequence length for tokenization.
-            total_train_samples, total_val_samples: Subsample for quick debug, if needed.
-            extra_kwargs: Catch any leftover parameters you might want to store.
-        """
         super().__init__()
+        self.model_config = model_config
+        self.train_config = train_config
+        self.data_config = data_config
 
-        # Default to empty dicts if none provided
-        backbone_kwargs = backbone_kwargs or {}
-        head_kwargs = head_kwargs or {}
+        self.model = create_model(model_config)
 
-        # 1) Create your model (backbone + head).
-        #    This likely returns something like an nn.Module that does MLM.
-        #    (In practice, you'd define your BERT backbone as 'backbone'
-        #     and your classification / MLM head as 'head'.)
-        self.model, used_backbone_kwargs, used_head_kwargs = create_model(
-            backbone=backbone,
-            head=head,
-            backbone_kwargs=backbone_kwargs,
-            head_kwargs=head_kwargs,
-        )
+        self.experiment_name = self.get_experiment_name()
 
-        # 2) Flatten all hyperparameters for logging (like in CIFAR10Trainer).
-        hparams_dict = {
-            "backbone": backbone,
-            "head": head,
-            "tokenizer_name": tokenizer_name,
-            "dataset_name": dataset_name,
-            "dataset_config": dataset_config,
-            "mlm_probability": mlm_probability,
-            "batch_size": batch_size,
-            "num_workers": num_workers,
-            "learning_rate": learning_rate,
-            "max_seq_len": max_seq_len,
-            "total_train_samples": total_train_samples,
-            "total_val_samples": total_val_samples,
-            **{f"backbone_{k}": v for k, v in used_backbone_kwargs.items()},
-            **{f"head_{k}": v for k, v in used_head_kwargs.items()},
-            **extra_kwargs,
-        }
-
-        self.experiment_name = self.experiment_name(hparams_dict)
-        self.save_hyperparameters(hparams_dict)
-
-        self.tokenizer_name = tokenizer_name
-        self.dataset_name = dataset_name
-        self.dataset_config = dataset_config
-        self.mlm_probability = mlm_probability
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.learning_rate = learning_rate
-        self.max_seq_len = max_seq_len
-        self.total_train_samples = total_train_samples
-        self.total_val_samples = total_val_samples
-
-        # 3) Hugging Face Tokenizer & Data Collator
-        self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.train_config.tokenizer_name)
         self.collator = DataCollatorForLanguageModeling(
-            tokenizer=self.tokenizer, mlm=True, mlm_probability=self.mlm_probability
+            tokenizer=self.tokenizer, mlm=True, mlm_probability=self.train_config.mlm_probability
         )
-
-        # 4) For convenience, keep references to datasets
         self.train_dataset = None
         self.val_dataset = None
 
-        # 5) Define your loss function (if your model doesn't internally handle it)
         self.loss_fn = nn.CrossEntropyLoss()
 
-    def experiment_name(self, hparams):
-        return f"Backbone[{hparams['backbone']}]-LayerType[{hparams['backbone_feedforward_linear_layer']}]-Activation[{hparams['backbone_feedforward_activation_layer']}]"
+    def get_experiment_name(self):
+        return f"Backbone[{self.model_config.backbone_type}]-LayerType[{self.model_config.feedforward_linear_layer}]-Activation[{self.model_config.feedforward_activation_layer}]"
 
     def forward(
         self,
@@ -177,7 +124,7 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
     # Lightning hooks
     # -----------------
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        return torch.optim.Adam(self.parameters(), lr=self.train_config.learning_rate)
 
     def training_step(self, batch, batch_idx):
         """
@@ -212,23 +159,21 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
         """
         Called once. Download the dataset here (only if not present).
         """
-        load_dataset(self.dataset_name, self.dataset_config)
-        AutoTokenizer.from_pretrained(self.tokenizer_name)
+        load_dataset("wikitext", "wikitext-2-raw-v1", cache_dir=self.data_config.data_dir)
+        AutoTokenizer.from_pretrained(self.train_config.tokenizer_name)
 
     def setup(self, stage: Optional[str] = None):
         """
         Called on each GPU/process. Create the dataset splits, tokenize, etc.
         """
         if stage == "fit" or stage is None:
-            raw_datasets = load_dataset(
-                self.dataset_name, self.dataset_config, cache_dir="data"
-            )
+            raw_datasets = load_dataset("wikitext", "wikitext-2-raw-v1", cache_dir=self.data_config.data_dir)
 
             def tokenize_function(examples):
                 return self.tokenizer(
                     examples["text"],
                     truncation=True,
-                    max_length=self.max_seq_len,
+                    max_length=self.model_config.max_seq_len,
                     return_special_tokens_mask=True,
                 )
 
@@ -244,12 +189,12 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
             )
 
             # (Optionally) shorten for debugging
-            if self.total_train_samples:
+            if self.train_config.total_train_samples:
                 train_ds = train_ds.select(
-                    range(min(self.total_train_samples, len(train_ds)))
+                    range(min(self.train_config.total_train_samples, len(train_ds)))
                 )
-            if self.total_val_samples:
-                val_ds = val_ds.select(range(min(self.total_val_samples, len(val_ds))))
+            if self.train_config.total_val_samples:
+                val_ds = val_ds.select(range(min(self.train_config.total_val_samples, len(val_ds))))
 
             # Convert to PyTorch
             train_ds.set_format(type="torch")
@@ -261,17 +206,17 @@ class WikiText2BertMLMTrainer(pl.LightningModule):
     def train_dataloader(self):
         return DataLoader(
             self.train_dataset,
-            batch_size=self.batch_size,
+            batch_size=self.train_config.batch_size,
             shuffle=True,
-            num_workers=self.num_workers,
+            num_workers=self.train_config.num_workers,
             collate_fn=self.collator,
         )
 
     def val_dataloader(self):
         return DataLoader(
             self.val_dataset,
-            batch_size=self.batch_size,
+            batch_size=self.train_config.batch_size,
             shuffle=False,
-            num_workers=self.num_workers,
+            num_workers=self.train_config.num_workers,
             collate_fn=self.collator,
         )
