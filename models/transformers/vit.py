@@ -6,7 +6,7 @@ from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
 from config import ModelConfig
-from models.blocks import ViTAttention, ViTFeedForward
+from models.blocks import ViTAttention, FeedForward
 from models.layers import LAYERS_REGISTRY
 
 
@@ -41,7 +41,7 @@ class Transformer(nn.Module):
                                 model_config.attention_linear_layer.lower()
                             ],
                         ),
-                        ViTFeedForward(
+                        FeedForward(
                             model_config.transformer_dim,
                             model_config.transformer_ffn_dim,
                             dropout=model_config.transformer_dropout,

@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 
-class ViTFeedForward(nn.Module):
+class FeedForward(nn.Module):
     def __init__(
         self,
         dim: int,

@@ -17,7 +17,7 @@ class BaseDataModule(pl.LightningDataModule):
         batch_size: int = 32,
         num_workers: int = 4,
         pin_memory: bool = True,
-        transform = None,
+        transform=None,
     ):
         super().__init__()
         self.data_dir = data_dir

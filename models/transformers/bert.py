@@ -5,7 +5,7 @@ import torch.nn as nn
 from einops import repeat
 
 from config import ModelConfig
-from models.blocks import TransformerAttention, ViTAttention, ViTFeedForward
+from models.blocks import TransformerAttention, ViTAttention, FeedForward
 from models.layers import LAYERS_REGISTRY
 
 # from einops.layers.torch import Rearrange  # not really needed for BERT embeddings
@@ -43,7 +43,7 @@ class Transformer(nn.Module):
                                 model_config.attention_linear_layer.lower()
                             ],
                         ),
-                        ViTFeedForward(
+                        FeedForward(
                             model_config.transformer_dim,
                             model_config.transformer_ffn_dim,
                             dropout=model_config.transformer_dropout,

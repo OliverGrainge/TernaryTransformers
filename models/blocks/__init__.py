@@ -1,11 +1,11 @@
 from .attention import TransformerAttention
 from .vitattention import ViTAttention
-from .vitfeedforward import ViTFeedForward
+from .feedforward import FeedForward
 
-__all__ = ["ViTAttention", "ViTFeedForward", "TransformerAttention"]
+__all__ = ["ViTAttention", "FeedForward", "TransformerAttention"]
 
 BLOCKS_REGISTRY = {
     "vitattention": ViTAttention,
-    "vitfeedforward": ViTFeedForward,
+    "feedforward": FeedForward,
     "attention": TransformerAttention,
 }
