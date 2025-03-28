@@ -5,7 +5,7 @@ import torch.nn as nn
 from einops import repeat
 
 from config import ModelConfig
-from models.blocks import TransformerAttention, ViTAttention, FeedForward
+from models.blocks import FeedForward, TransformerAttention, ViTAttention
 from models.layers import LAYERS_REGISTRY
 
 

@@ -4,7 +4,8 @@ import sys
 
 import torch
 import wandb
-from datasets import load_dataset
+
+from dataloaders import load_dataset
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

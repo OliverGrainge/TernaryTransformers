@@ -3,11 +3,11 @@ from typing import Optional
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-from datasets import load_dataset
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, DataCollatorForLanguageModeling
 
 from config import DataConfig, ModelConfig, TrainConfig, parse_configs
+from dataloaders import load_dataset
 
 # Suppose you have a create_model function that returns (model, backbone_kwargs, head_kwargs)
 # from your codebase

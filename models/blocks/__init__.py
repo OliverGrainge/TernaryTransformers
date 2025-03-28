@@ -1,6 +1,6 @@
 from .attention import TransformerAttention
-from .vitattention import ViTAttention
 from .feedforward import FeedForward
+from .vitattention import ViTAttention
 
 __all__ = ["ViTAttention", "FeedForward", "TransformerAttention"]
 

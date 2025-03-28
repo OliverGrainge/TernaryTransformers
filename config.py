@@ -113,7 +113,7 @@ class ModelConfig:
     # Embedding parameters
     embedding_dim: int = 256  # renamed from in_dim
     embedding_dropout: float = 0.1  # renamed from emb_dropout
-    max_sequence_length: int = 196  # renamed from max_seq_len
+    context_length: int = 196  # renamed from max_seq_len
     vocab_size: int = 1000
 
     # Attention parameters
