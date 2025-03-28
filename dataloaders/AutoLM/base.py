@@ -7,7 +7,7 @@ from transformers import AutoTokenizer
 import os 
 
 from config import DataConfig
-
+from typing import Dict, Any
 
 class AutoregressiveLMDataModule(pl.LightningDataModule):
     def __init__(self, data_config: DataConfig):
@@ -29,6 +29,14 @@ class AutoregressiveLMDataModule(pl.LightningDataModule):
         self.train_dataset = None
         self.val_dataset = None
         self.test_dataset = None
+
+        self.save_configs()
+
+    def save_configs(self) -> None:
+        hparams: Dict[str, Any] = {
+            **{f"data_{k}": v for k, v in self.data_config.__dict__.items()},
+        }
+        self.save_hyperparameters(hparams)
 
     def _validate_config(self, data_config: DataConfig) -> None:
         """Validate that the data_config contains all required parameters for autoregressive LM."""

@@ -3,6 +3,7 @@ from typing import Optional
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, DataCollatorForLanguageModeling
+from typing import Dict, Any
 
 from config import DataConfig
 
@@ -19,6 +20,14 @@ class BaseMLMDataModule(pl.LightningDataModule):
             mlm_probability=self.data_config.mlm_probability,
         )
         self.split_mapping = {"fit": ["train", "validation"], "test": ["test"]}
+
+        self.save_configs()
+
+    def save_configs(self) -> None:
+        hparams: Dict[str, Any] = {
+            **{f"data_{k}": v for k, v in self.data_config.__dict__.items()},
+        }
+        self.save_hyperparameters(hparams)
 
     def _validate_config(self, data_config: DataConfig) -> None:
         """Validate that the data_config contains all required parameters."""

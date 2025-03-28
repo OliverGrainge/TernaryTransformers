@@ -7,14 +7,21 @@ from typing import Optional
 @dataclass
 class DataConfig:
     # My Laptop
-    # data_dir: str = "/Users/olivergrainge/Documents/github/Datasets"
-    # checkpoints_dir: str = "/Users/olivergrainge/Documents/github/TernaryTransformers/examples/checkpoints"
+    data_dir: str = "/Users/olivergrainge/Documents/github/Datasets"
+    checkpoints_dir: str = "/Users/olivergrainge/Documents/github/TernaryTransformers/examples/checkpoints"
 
     # My Desktop
-    data_dir: str = "/home/oliver/Documents/github/TernaryTransformers/examples/data"
-    checkpoints_dir: str = (
-        "/home/oliver/Documents/github/TernaryTransformers/examples/checkpoints"
-    )
+    #data_dir: str = "/home/oliver/Documents/github/TernaryTransformers/examples/data"
+    #checkpoints_dir: str = (
+    #    "/home/oliver/Documents/github/TernaryTransformers/examples/checkpoints"
+    #)
+
+    tokenizer_name: str = "gpt2"
+    batch_size: int = 32
+    num_workers: int = 0
+    pin_memory: bool = False
+    context_length: int = 196
+    mlm_probability: float = 0.15
 
     @classmethod
     def add_args(cls, parser: argparse.ArgumentParser):
@@ -48,13 +55,12 @@ class DataConfig:
 @dataclass
 class TrainConfig:
     project_name: str = "empty"
-    batch_size: int = 64
     max_epochs: int = 100
     accelerator: str = "auto"
     log_steps: int = 10
     val_check_interval: int = 1.0
     learning_rate: float = 0.001
-    num_workers: int = 0
+    
 
     @classmethod
     def add_args(cls, parser: argparse.ArgumentParser):

@@ -6,7 +6,6 @@ from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
 from config import ModelConfig
-from models.blocks import ViTAttention, ViTFeedForward
 from models.layers import LAYERS_REGISTRY
 
 
