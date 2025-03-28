@@ -19,7 +19,7 @@ class DataConfig:
     #    "/home/oliver/Documents/github/TernaryTransformers/examples/checkpoints"
     #)
 
-    tokenizer_name: str = "gpt2"
+    tokenizer_name: str = "bert-base-uncased"
     batch_size: int = 32
     num_workers: int = 0
     pin_memory: bool = False

@@ -3,7 +3,7 @@ import torch
 
 from models.layers import LINEAR_REGISTRY
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())
 def test_layer_instantiation_no_bias(layer_type):
     layer = layer_type(128, 256)
@@ -11,7 +11,7 @@ def test_layer_instantiation_no_bias(layer_type):
     assert layer.weight is not None
     assert layer.bias is not None
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())
 def test_layer_instantiation_with_bias(layer_type):
     layer = layer_type(128, 256, bias=True)
@@ -19,7 +19,7 @@ def test_layer_instantiation_with_bias(layer_type):
     assert layer.weight is not None
     assert layer.bias is not None
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())
 def test_layer_instantiation_without_bias(layer_type):
     layer = layer_type(128, 256, bias=False)
@@ -27,7 +27,7 @@ def test_layer_instantiation_without_bias(layer_type):
     assert layer.weight is not None
     assert layer.bias is None
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())
 def test_layer_forward_no_bias(layer_type):
     layer = layer_type(128, 256)
@@ -37,7 +37,7 @@ def test_layer_forward_no_bias(layer_type):
     assert out.shape == (1, 256)
     assert out.dtype == x.dtype
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())
 def test_layer_forward_with_bias(layer_type):
     layer = layer_type(128, 256, bias=True)
@@ -47,7 +47,7 @@ def test_layer_forward_with_bias(layer_type):
     assert out.shape == (1, 256)
     assert out.dtype == x.dtype
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())
 def test_layer_forward_without_bias(layer_type):
     layer = layer_type(128, 256, bias=False)
@@ -78,7 +78,7 @@ def test_layer_backward_with_bias(layer_type):
     assert layer.weight.grad is not None
     assert layer.bias.grad is not None
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())
 def test_layer_backward_without_bias(layer_type):
     layer = layer_type(128, 256, bias=False)
@@ -89,7 +89,7 @@ def test_layer_backward_without_bias(layer_type):
     assert layer.weight.grad is not None
     assert not hasattr(layer, "bias") or layer.bias is None or layer.bias.grad is None
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())
 def test_batch_input(layer_type):
     layer = layer_type(128, 256)
@@ -98,7 +98,7 @@ def test_batch_input(layer_type):
     out = layer(x)
     assert out.shape == (batch_size, 256)
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())
 def test_dtype_preservation(layer_type):
     layer = layer_type(128, 256)
@@ -114,7 +114,7 @@ def test_dtype_preservation(layer_type):
     out_float64 = layer_float64(x_float64)
     assert out_float64.dtype == torch.float64
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("layer_type", LINEAR_REGISTRY.values())
 def test_device_placement(layer_type):
     if torch.cuda.is_available():
