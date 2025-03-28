@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 
 from torchvision import datasets, transforms
 
-from config import DataConfig
+from config import Config
 
 from .base import BaseDataModule
 
@@ -11,7 +11,7 @@ from .base import BaseDataModule
 class MNISTDataModule(BaseDataModule):
     def __init__(
         self,
-        data_config: DataConfig,
+        data_config: Config,
     ) -> None:
         super().__init__(data_config)
         if self.transform is None:

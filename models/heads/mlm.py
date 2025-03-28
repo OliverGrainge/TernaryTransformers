@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
 
-from config import ModelConfig
+from config import Config
 
 
 class MLMHead(nn.Module):
-    def __init__(self, model_config: ModelConfig):
+    def __init__(self, model_config: Config):
         super().__init__()
 
         self.fc1 = nn.Linear(model_config.head_dim, model_config.head_dim)

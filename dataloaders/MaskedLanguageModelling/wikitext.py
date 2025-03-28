@@ -3,13 +3,13 @@ from typing import Optional
 
 from datasets import load_dataset
 
-from config import DataConfig
+from config import Config
 
 from .base import BaseMLMDataModule
 
 
 class WikiTextMLMDataModule(BaseMLMDataModule):
-    def __init__(self, data_config: DataConfig):
+    def __init__(self, data_config: Config):
         super().__init__(data_config)
         self.dataset_name = "wikitext"
         self.dataset_config = "wikitext-2-raw-v1"

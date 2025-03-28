@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, DataCollatorForLanguageModeling
 
-from config import DataConfig, ModelConfig, TrainConfig, parse_configs
+from config import Config, parse_configs
 from datasets import load_dataset
 
 # Suppose you have a create_model function that returns (model, backbone_kwargs, head_kwargs)
@@ -18,8 +18,8 @@ class MLMTrainer(pl.LightningModule):
 
     def __init__(
         self,
-        model_config: ModelConfig,
-        train_config: TrainConfig,
+        model_config: Config,
+        train_config: Config,
     ):
         super().__init__()
         self.model_config = model_config

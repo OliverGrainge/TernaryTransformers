@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 def test_mlm_dataloader_members(dataloader_info):
     
     dataloader_cls, config_cls = dataloader_info
-    config = config_cls(tokenizer_name="bert-base-uncased")
+    config = config_cls()
     datamodule = dataloader_cls(config)
     assert hasattr(datamodule, "setup")
     assert hasattr(datamodule, "train_dataloader")
@@ -21,7 +21,7 @@ def test_mlm_dataloader_members(dataloader_info):
 @pytest.mark.parametrize("dataloader_info", ALL_MLM_DATALOADERS.values())
 def test_mlm_dataloader_save_configs(dataloader_info):
     dataloader_cls, config_cls = dataloader_info
-    config = config_cls(tokenizer_name="bert-base-uncased")
+    config = config_cls()
     datamodule = dataloader_cls(config)
     assert hasattr(datamodule, "save_configs")
 
@@ -32,7 +32,7 @@ def test_mlm_dataloader_save_configs(dataloader_info):
 @pytest.mark.parametrize("dataloader_info", ALL_MLM_DATALOADERS.values())
 def test_mlm_dataloader_setup(dataloader_info):
     dataloader_cls, config_cls = dataloader_info
-    config = config_cls(tokenizer_name="bert-base-uncased")
+    config = config_cls()
     datamodule = dataloader_cls(config)
     datamodule.setup("fit")
     train_loader = datamodule.train_dataloader()
@@ -47,7 +47,7 @@ def test_mlm_dataloader_setup(dataloader_info):
 @pytest.mark.parametrize("dataloader_info", ALL_MLM_DATALOADERS.values())
 def test_mlm_dataloader_train_dataloader(dataloader_info):
     dataloader_cls, config_cls = dataloader_info
-    config = config_cls(tokenizer_name="bert-base-uncased")
+    config = config_cls()
     datamodule = dataloader_cls(config)
     datamodule.setup("fit")
     train_loader = datamodule.train_dataloader()

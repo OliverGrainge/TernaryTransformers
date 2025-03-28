@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from einops import repeat
 
-from config import ModelConfig
+from config import Config
 from models.blocks import FeedForward, TransformerAttention, ViTAttention
 from models.layers import LAYERS_REGISTRY
 
@@ -17,7 +17,7 @@ class CausalTransformer(nn.Module):
 
     def __init__(
         self,
-        model_config: ModelConfig,
+        model_config: Config,
     ) -> None:
 
         super().__init__()
@@ -79,7 +79,7 @@ class GPT(nn.Module):
 
     def __init__(
         self,
-        model_config: ModelConfig,
+        model_config: Config,
     ) -> None:
         super().__init__()
 

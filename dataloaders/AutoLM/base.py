@@ -6,11 +6,11 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 import os 
 
-from config import DataConfig
+from config import Config
 from typing import Dict, Any
 
 class AutoregressiveLMDataModule(pl.LightningDataModule):
-    def __init__(self, data_config: DataConfig):
+    def __init__(self, data_config: Config):
         """Base class for autoregressive language modeling data modules.
 
         Args:
@@ -38,7 +38,7 @@ class AutoregressiveLMDataModule(pl.LightningDataModule):
         }
         self.save_hyperparameters(hparams)
 
-    def _validate_config(self, data_config: DataConfig) -> None:
+    def _validate_config(self, data_config: Config) -> None:
         """Validate that the data_config contains all required parameters for autoregressive LM."""
         required_params = [
             "data_dir",

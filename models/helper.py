@@ -3,7 +3,7 @@ import inspect
 import torch
 import torch.nn as nn
 
-from config import ModelConfig
+from config import Config
 from models.heads import HEADS_REGISTRY
 from models.transformers import TRANSFORMERS_REGISTRY
 
@@ -20,7 +20,7 @@ class Model(nn.Module):
 
 
 def create_model(
-    model_config: ModelConfig,
+    model_config: Config,
 ):
     transformer_cls = TRANSFORMERS_REGISTRY[model_config.backbone_type.lower()]
     head_cls = HEADS_REGISTRY[model_config.head_type.lower()]

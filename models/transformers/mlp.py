@@ -5,14 +5,14 @@ import torch.nn as nn
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
-from config import ModelConfig
+from config import Config
 from models.layers import LAYERS_REGISTRY
 
 
 class MLP(nn.Module):
     def __init__(
         self,
-        model_config: ModelConfig,
+        model_config: Config,
     ):
         super().__init__()
         linear_layer = LAYERS_REGISTRY[model_config.mlp_linear_layer.lower()]

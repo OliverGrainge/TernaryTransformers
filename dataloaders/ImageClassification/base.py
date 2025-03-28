@@ -4,7 +4,7 @@ from typing import Optional
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset
 
-from config import DataConfig
+from config import Config
 
 
 class BaseDataModule(pl.LightningDataModule):
@@ -15,7 +15,7 @@ class BaseDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        data_config: DataConfig,
+        data_config: Config,
     ):
         super().__init__()
         self._validate_config(data_config)
@@ -26,7 +26,7 @@ class BaseDataModule(pl.LightningDataModule):
         self.val_dataset: Optional[Dataset] = None
         self.test_dataset: Optional[Dataset] = None
 
-    def _validate_config(self, data_config: DataConfig) -> None:
+    def _validate_config(self, data_config: Config) -> None:
         """Validate that the data_config contains all required parameters for image classification."""
         required_params = ["data_dir", "batch_size", "num_workers", "pin_memory"]
 

@@ -41,12 +41,7 @@ def test_alm_vocab_size(dataloader_tuple):
 @pytest.mark.parametrize("dataloader_tuple", ALL_AUTOLM_DATALOADERS.values())
 def test_alm_setup(dataloader_tuple):
     dataloader_cls, config_cls = dataloader_tuple
-    config = config_cls(
-        tokenizer_name="gpt2",
-        batch_size=4,
-        num_workers=0,
-        context_length=16
-    )
+    config = config_cls()
     datamodule = dataloader_cls(config)
     datamodule.setup("fit")
     assert hasattr(datamodule, "train_dataset"), "Train dataloader should be defined"

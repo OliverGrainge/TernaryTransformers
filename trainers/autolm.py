@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 import torch
 
-from config import DataConfig, ModelConfig, TrainConfig, parse_configs
+from config import Config, parse_configs
 from models.helper import create_model
 
 
@@ -9,8 +9,8 @@ from models.helper import create_model
 class AutoLMTrainer(pl.LightningModule):
     def __init__(
         self,
-        model_config: ModelConfig,
-        train_config: TrainConfig,
+        model_config: Config,
+        train_config: Config,
     ):
         super().__init__()
         self.model_config = model_config
@@ -21,7 +21,7 @@ class AutoLMTrainer(pl.LightningModule):
         self.experiment_name = self.experiment_name(model_config)
         self.save_configs()
 
-    def experiment_name(self, model_config: ModelConfig):
+    def experiment_name(self, model_config: Config):
         return f"Backbone[{model_config.backbone_type}]-LayerType[{model_config.feedforward_linear_layer}]-Activation[{model_config.feedforward_activation_layer}]"
 
     def save_configs(self):

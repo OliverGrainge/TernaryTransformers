@@ -6,15 +6,15 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
-from config import DataConfig, ModelConfig, TrainConfig
+from config import Config
 from models.helper import create_model
 
 
 class ImageClassificationTrainer(pl.LightningModule):
     def __init__(
         self,
-        model_config: ModelConfig,
-        train_config: TrainConfig,
+        model_config: Config,
+        train_config: Config,
     ):
         super().__init__()
         self.model_config = model_config
@@ -34,7 +34,7 @@ class ImageClassificationTrainer(pl.LightningModule):
         }
         self.save_hyperparameters(hparams)
 
-    def experiment_name(self, config: ModelConfig):
+    def experiment_name(self, config: Config):
         try: 
             return f"Backbone[{config.backbone_type}]-LayerType[{config.feedforward_linear_layer}]-Activation[{config.feedforward_activation_layer}]"
         except: 

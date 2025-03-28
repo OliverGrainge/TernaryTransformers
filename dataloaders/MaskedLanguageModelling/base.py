@@ -5,11 +5,11 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, DataCollatorForLanguageModeling
 from typing import Dict, Any
 
-from config import DataConfig
+from config import Config
 
 
 class BaseMLMDataModule(pl.LightningDataModule):
-    def __init__(self, data_config: DataConfig):
+    def __init__(self, data_config: Config):
         super().__init__()
         self._validate_config(data_config)
         self.data_config = data_config
@@ -29,7 +29,7 @@ class BaseMLMDataModule(pl.LightningDataModule):
         }
         self.save_hyperparameters(hparams)
 
-    def _validate_config(self, data_config: DataConfig) -> None:
+    def _validate_config(self, data_config: Config) -> None:
         """Validate that the data_config contains all required parameters."""
         required_params = [
             "tokenizer_name",

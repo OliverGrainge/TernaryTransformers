@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from einops import repeat
 
-from config import ModelConfig
+from config import Config
 from models.blocks import FeedForward, TransformerAttention, ViTAttention
 from models.layers import LAYERS_REGISTRY
 
@@ -19,7 +19,7 @@ class Transformer(nn.Module):
 
     def __init__(
         self,
-        model_config: ModelConfig,
+        model_config: Config,
     ) -> None:
         super().__init__()
         self.norm = nn.LayerNorm(model_config.transformer_dim)
@@ -80,7 +80,7 @@ class Bert(nn.Module):
 
     def __init__(
         self,
-        model_config: ModelConfig,
+        model_config: Config,
     ) -> None:
         super().__init__()
 

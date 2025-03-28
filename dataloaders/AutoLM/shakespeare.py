@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-from config import DataConfig
+from config import Config
 
 from .base import AutoregressiveLMDataModule
 
@@ -16,7 +16,7 @@ from .base import AutoregressiveLMDataModule
 class CharacterDataset(torch.utils.data.Dataset):
     def __init__(
         self,
-        data_config: DataConfig,
+        data_config: Config,
         tokenizer: AutoTokenizer,
         context_length: int = 64,
         split: Literal["train", "val", "test"] = "train",
@@ -89,7 +89,7 @@ class CharacterDataset(torch.utils.data.Dataset):
 
 
 class ShakespeareDataModule(AutoregressiveLMDataModule):
-    def __init__(self, data_config: DataConfig):
+    def __init__(self, data_config: Config):
         """Initialize Shakespeare data module.
 
         Args:
