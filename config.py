@@ -326,6 +326,7 @@ class NanoGPTModelConfig(ModelConfig):
     embedding_linear_layer = "Linear"
     attention_linear_layer = "Linear"
     attention_norm_layer = "LayerNorm"
+    attention_activation_layer = "GELU"
     feedforward_linear_layer = "Linear"
     feedforward_norm_layer = "LayerNorm"
     feedforward_activation_layer = "GELU"
@@ -351,6 +352,7 @@ class ShakespeareTrainConfig(TrainConfig):
 
 class ShakespeareDataConfig(DataConfig):
     checkpoints_dir: str = os.path.join(DataConfig.checkpoints_dir, "tiny_shakespeare")
+    tokenizer_name = "gpt2"
     batch_size = 12 
     num_workers = 0 
     context_length = 196 
