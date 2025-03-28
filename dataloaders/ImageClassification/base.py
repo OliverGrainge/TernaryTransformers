@@ -16,12 +16,11 @@ class BaseDataModule(pl.LightningDataModule):
     def __init__(
         self,
         data_config: DataConfig,
-        transform=None,
     ):
         super().__init__()
         self._validate_config(data_config)
         self.data_config = data_config
-        self.transform = transform
+        self.transform = data_config.transform
         # These will be populated in setup()
         self.train_dataset: Optional[Dataset] = None
         self.val_dataset: Optional[Dataset] = None

@@ -96,13 +96,7 @@ class ShakespeareDataModule(AutoregressiveLMDataModule):
             data_config: Configuration for data loading
         """
         super().__init__(data_config)
-        self.save_configs()
 
-    def save_configs(self) -> None:
-        hparams: Dict[str, Any] = {
-            **{f"data_{k}": v for k, v in self.data_config.__dict__.items()},
-        }
-        self.save_hyperparameters(hparams)
     def _load_data(self) -> str:
         """Load or download Shakespeare dataset."""
         shakespeare_path = Path(self.data_config.data_dir) / "shakespeare.txt"

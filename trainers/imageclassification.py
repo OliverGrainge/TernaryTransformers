@@ -10,7 +10,7 @@ from config import DataConfig, ModelConfig, TrainConfig
 from models.helper import create_model
 
 
-class MNISTTrainer(pl.LightningModule):
+class ImageClassificationTrainer(pl.LightningModule):
     def __init__(
         self,
         model_config: ModelConfig,
@@ -38,7 +38,6 @@ class MNISTTrainer(pl.LightningModule):
         return f"Backbone[{config.backbone_type}]-LayerType[{config.mlp_linear_layer}]-Activation[{config.mlp_activation_layer}]"
 
     def forward(self, x):
-        x = x.view(x.size(0), -1)
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
@@ -51,7 +50,7 @@ class MNISTTrainer(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
-        loss = self.loss_fn(logits, y)
+        loss = self.loss_fn(logits, y.long())
         preds = torch.argmax(logits, dim=1)
         acc = (preds == y).float().mean()
         self.log("val_loss", loss)
@@ -60,6 +59,7 @@ class MNISTTrainer(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
+        print("==============", logits.shape, y.shape)
         preds = torch.argmax(logits, dim=-1)
         acc = (preds == y).float().mean()
         self.log("test_acc", acc)

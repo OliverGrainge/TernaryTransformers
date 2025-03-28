@@ -9,15 +9,13 @@ from .base import BaseDataModule
 
 
 class MNISTDataModule(BaseDataModule):
-    # Class constants for dataset statistics
-
     def __init__(
         self,
         data_config: DataConfig,
-        transform: Optional[transforms.Compose] = None,
     ) -> None:
-        transform = transform or self._get_default_transform()
-        super().__init__(data_config, transform)
+        super().__init__(data_config)
+        if self.transform is None:
+            self.transform = self._get_default_transform()
         self.save_configs()
 
     @classmethod
