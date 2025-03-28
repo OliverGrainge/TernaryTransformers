@@ -35,7 +35,7 @@ def main():
         max_epochs=train_config.max_epochs,
         accelerator=train_config.accelerator,
         precision=train_config.precision,
-        log_steps=train_config.log_steps,
+        log_every_n_steps=train_config.log_every_n_steps,
         val_check_interval=train_config.val_check_interval,
         logger=pl.loggers.WandbLogger(
             project=train_config.project_name, name=module.experiment_name

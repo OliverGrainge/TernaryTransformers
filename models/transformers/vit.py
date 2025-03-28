@@ -83,7 +83,7 @@ class ViT(nn.Module):
 
         num_patches = (image_height // patch_height) * (image_width // patch_width)
         patch_dim = model_config.image_channels * patch_height * patch_width
-
+        
         self.to_patch_embedding = nn.Sequential(
             Rearrange(
                 "b c (h p1) (w p2) -> b (h w) (p1 p2 c)",

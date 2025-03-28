@@ -14,17 +14,18 @@ class DataConfig:
     checkpoints_dir: str = "/Users/olivergrainge/Documents/github/TernaryTransformers/examples/checkpoints"
 
     # My Desktop
-    #data_dir: str = "/home/oliver/Documents/github/TernaryTransformers/examples/data"
+    #data_dir: str = "/home/oliver/Documents/github/TernaryTransformers/
+    #examples/data"
     #checkpoints_dir: str = (
     #    "/home/oliver/Documents/github/TernaryTransformers/examples/checkpoints"
     #)
 
-    tokenizer_name: str = "bert-base-uncased"
-    batch_size: int = 32
-    num_workers: int = 0
-    pin_memory: bool = False
-    context_length: int = 196
-    mlm_probability: float = 0.15
+    #tokenizer_name: str = "bert-base-uncased"
+    #batch_size: int = 32
+   # num_workers: int = 0
+    
+    #context_length: int = 196
+    #mlm_probability: float = 0.15
 
     @classmethod
     def add_args(cls, parser: argparse.ArgumentParser):
@@ -96,57 +97,6 @@ class TrainConfig:
 # ---------------- ModelConfig ----------------
 @dataclass
 class ModelConfig:
-    # Base architecture parameters
-    backbone: str = "vit"  # backbone architecture name
-
-    # Transformer architecture parameters
-    transformer_depth: int = 12
-    transformer_heads: int = 8
-    transformer_dim: int = 256  # renamed from dim
-    transformer_dim_head: int = transformer_dim // transformer_heads
-    transformer_ffn_dim: int = 2048  # renamed from ffn_dim
-    transformer_dropout: float = 0.1  # renamed from dropout
-
-    # MLP architecture parameters
-    mlp_in_dim: int = 256
-    mlp_depth: int = 3
-    mlp_dim: int = 256
-    mlp_dropout: float = 0.0
-
-    # Image-specific parameters
-    image_size: int = 224
-    image_patch_size: int = 16
-    image_channels: int = 3
-
-    # Embedding parameters
-    embedding_dim: int = 256  # renamed from in_dim
-    embedding_dropout: float = 0.1  # renamed from emb_dropout
-    vocab_size: int = 1000
-
-    # Attention parameters
-    attention_head_dim: int = 64  # renamed from attn_head_dim
-
-    # Layer specifications
-    embedding_norm_layer: str = "LayerNorm"  # renamed for consistency
-    embedding_linear_layer: str = "Linear"  # renamed for consistency
-    attention_linear_layer: str = "Linear"
-    attention_norm_layer: str = "LayerNorm"
-    attention_activation_layer: str = "GELU"
-    feedforward_linear_layer: str = "Linear"
-    feedforward_norm_layer: str = "LayerNorm"
-    feedforward_activation_layer: str = "GELU"
-    mlp_linear_layer: str = "Linear"
-    mlp_norm_layer: str = "LayerNorm"
-    mlp_activation_layer: str = "RELU"
-
-    # Classification head parameters
-    head_type: str = "ImageClassificationHead"  # renamed from head
-    head_in_dim: int = 256
-    head_out_dim: int = 1000  # renamed from out_dim
-    head_dim: int = 256  # renamed from head_dim
-    head_linear_layer: str = "Linear"  # renamed from linear_layer
-    head_depth: int = 1
-    head_dropout: float = 0.0
 
     @classmethod
     def add_args(cls, parser: argparse.ArgumentParser):
@@ -206,6 +156,7 @@ class MLPModelConfig(ModelConfig):
 
     head_type: str = "ImageClassificationHead"  # renamed from head
     head_in_dim: int = 256
+    head_dim = 128
     head_out_dim: int = 10  # renamed from out_dim
     head_linear_layer: str = "Linear"  # renamed from linear_layer
     head_depth: int = 1
@@ -247,8 +198,8 @@ class MiniViTModelConfig(ModelConfig):
     transformer_depth = 6
     transformer_dropout = 0.1
     transformer_dim_head = transformer_dim // transformer_heads
-    image_in_channels = 1
     image_size = 32
+    image_channels = 3
     image_patch_size = 4
     embedding_dropout = 0.0
 
@@ -258,6 +209,8 @@ class MiniViTModelConfig(ModelConfig):
     attention_norm_layer = "LayerNorm"
     feedforward_linear_layer = "Linear"
     feedforward_norm_layer = "LayerNorm"
+    attention_activation_layer = "GELU"
+    feedforward_activation_layer = "GELU"
 
     head_type: str = "ImageClassificationHead"
     head_in_dim = 128
@@ -270,7 +223,6 @@ class MiniViTModelConfig(ModelConfig):
 
 class CIFAR10TrainConfig(TrainConfig):
     project_name = "CIFAR10-classification"
-    batch_size = 128
     max_epochs = 100
     learning_rate = 0.001
     log_every_n_steps = 10 
@@ -281,6 +233,9 @@ class CIFAR10TrainConfig(TrainConfig):
 
 class CIFAR10DataConfig(DataConfig):
     checkpoints_dir: str = os.path.join(DataConfig.checkpoints_dir, "cifar10")
+    pin_memory: bool = False
+    batch_size = 128
+    num_workers = 0
 
     transform: torchvision.transforms.Compose = transforms.Compose(
         [
@@ -305,17 +260,28 @@ class MiniBertModelConfig(ModelConfig):
     transformer_dim = 256
     transformer_depth = 6
     transformer_heads = 8
-    transformer_mlp_dim = 1024
+    transformer_ffn_dim = 1024
     transformer_dim_head = transformer_dim // transformer_heads
     transformer_dropout = 0.1
-    transformer_emb_dropout = 0.1
-    transformer_num_segments = 2
-    transformer_attention_norm_layer = "LayerNorm"
-    transformer_feedforward_norm_layer = "LayerNorm"
-    transformer_attention_activation_layer = "GELU"
-    transformer_feedforward_activation_layer = "GELU"
-    transformer_attention_linear_layer = "Linear"
-    transformer_feedforward_linear_layer = "Linear"
+
+    attention_norm_layer = "LayerNorm"
+    feedforward_norm_layer = "LayerNorm"
+    attention_activation_layer = "GELU"
+    feedforward_activation_layer = "GELU"
+    attention_linear_layer = "Linear"
+    feedforward_linear_layer = "Linear"
+    embedding_dropout = 0.1
+    embedding_norm_layer = "LayerNorm"
+
+
+    head_type: str = "ProjectionHead"
+    head_in_dim = transformer_dim
+    head_out_dim = transformer_dim
+    head_dim = transformer_dim
+    head_linear_layer = "Linear"
+    head_depth = 1
+    head_dropout = 0.0
+
 
 
 
@@ -337,6 +303,7 @@ class WikiTextMLMDataConfig(DataConfig):
     batch_size = 12
     context_length = 128 
     tokenizer_name = "bert-base-uncased"
+    pin_memory = False
 
 
 

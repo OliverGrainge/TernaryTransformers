@@ -35,7 +35,10 @@ class ImageClassificationTrainer(pl.LightningModule):
         self.save_hyperparameters(hparams)
 
     def experiment_name(self, config: ModelConfig):
-        return f"Backbone[{config.backbone_type}]-LayerType[{config.mlp_linear_layer}]-Activation[{config.mlp_activation_layer}]"
+        try: 
+            return f"Backbone[{config.backbone_type}]-LayerType[{config.feedforward_linear_layer}]-Activation[{config.feedforward_activation_layer}]"
+        except: 
+            return f"Backbone[{config.backbone_type}]-LayerType[{config.mlp_linear_layer}]-Activation[{config.mlp_activation_layer}]"
 
     def forward(self, x):
         return self.model(x)
