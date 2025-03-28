@@ -92,7 +92,6 @@ class MNISTDataConfig(Config):
     batch_size: int = 32
     num_workers: int = 0
     pin_memory: bool = False
-
     transform: str = None
 
 
@@ -150,7 +149,6 @@ class CIFAR10DataConfig(Config):
     batch_size: int = 128
     num_workers: int = 0
     transform: str = None 
-
 
 
 # ---------------------------------------- BertMLM DEFAULT CONFIG ----------------------------------------
