@@ -12,10 +12,11 @@ from pytorch_lightning.cli import LightningCLI
 from trainers import ViTImageClassifierModule
 mp.set_start_method("forkserver", force=True)
 from pytorch_lightning.cli import LightningCLI
+from runs.cli import TernaryCLI
 
 
 def main():
-
+    """
     checkpoint_callback = ModelCheckpoint(
         monitor="val_loss",
         mode="min",
@@ -24,8 +25,8 @@ def main():
         every_n_epochs=1,
         dirpath="./checkpoints/vit/",
     )
-
-    LightningCLI(
+    """
+    TernaryCLI(
         model_class=ViTImageClassifierModule,
         datamodule_class=ImageClassificationDataModule,
         trainer_defaults={
@@ -34,9 +35,8 @@ def main():
             "precision": "16-mixed",
             "devices": 1,
             "log_every_n_steps": 10,
-            "callbacks": [checkpoint_callback],
+            #"callbacks": [checkpoint_callback],
         },
-        
         save_config_callback=None,
     )
 
