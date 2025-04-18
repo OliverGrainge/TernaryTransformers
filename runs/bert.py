@@ -1,16 +1,20 @@
 import multiprocessing as mp
 import os
 import sys
-import torch 
+
+import torch
+
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-torch.set_float32_matmul_precision('high')
+torch.set_float32_matmul_precision("high")
 
 from dataloaders.MaskedLanguageModelling import MLMDataModule
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.cli import LightningCLI
 from trainers import BertModule
+
 from runs.cli import TernaryCLI
+
 mp.set_start_method("forkserver", force=True)
 
 
