@@ -1,6 +1,6 @@
 import os
 import sys
-
+import multiprocessing as mp
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -9,7 +9,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from dataloaders.ImageClassification import CIFAR10DataModule
 from trainers import ViTImageClassifierModule
 
-
+mp.set_start_method('forkserver', force=True)
 def main():
     checkpoint_callback = ModelCheckpoint(
         monitor="val_loss",

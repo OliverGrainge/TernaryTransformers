@@ -22,7 +22,7 @@ class Wikitext2DataModule(pl.LightningDataModule):
         max_length: int = 512,
         # loader config
         batch_size: int = 32,
-        num_workers: int = 0,
+        num_workers: int = 6,
         pin_memory: bool = True,
     ):
         super().__init__()

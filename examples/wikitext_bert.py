@@ -1,6 +1,6 @@
 import os
 import sys
-
+import multiprocessing as mp
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -9,6 +9,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from dataloaders.MaskedLanguageModelling import Wikitext2DataModule
 from trainers import BertModule
 
+mp.set_start_method('forkserver', force=True)
 
 def main():
     checkpoint_callback = ModelCheckpoint(

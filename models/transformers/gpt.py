@@ -145,6 +145,9 @@ class GPT(nn.Module):
             feedforward_linear_layer=feedforward_linear_layer,
         )
 
+        # --- Output Projection ---
+        self.to_logits = nn.Linear(dim, vocab_size)
+
     def forward(
         self,
         input_ids: torch.Tensor,
@@ -174,4 +177,7 @@ class GPT(nn.Module):
 
         # Pass through the causal Transformer
         x = self.transformer(x, attention_mask=attention_mask)
+
+        # Project to vocabulary size
+        x = self.to_logits(x)
         return x

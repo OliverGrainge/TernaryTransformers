@@ -9,6 +9,8 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 class CharacterDataset(torch.utils.data.Dataset):
     def __init__(
         self,
@@ -34,6 +36,7 @@ class CharacterDataset(torch.utils.data.Dataset):
         data = split_data[split]
 
         # Tokenize the data
+        tokenizer.model_max_length = int(1e12)
         encodings = tokenizer(data, truncation=False, return_tensors="pt")
         self.data = encodings["input_ids"].squeeze()
         self.context_length = context_length
@@ -88,7 +91,7 @@ class ShakespeareDataModule(pl.LightningDataModule):
         data_dir: str = "./data/shakespeare",
         context_length: int = 64,
         batch_size: int = 32,
-        num_workers: int = 0,
+        num_workers: int = 6,
         tokenizer_name: str = "gpt2",
     ):
         """Initialize Shakespeare data module.

@@ -23,7 +23,7 @@ class CIFAR10DataModule(pl.LightningDataModule):
         self,
         data_dir: str = "./data",
         batch_size: int = 32,
-        num_workers: int = 0,
+        num_workers: int = 6,
         pin_memory: bool = False,
         image_size: int = 224,
     ) -> None:

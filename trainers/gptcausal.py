@@ -46,6 +46,7 @@ class GPTCausalModule(pl.LightningModule):
         self.lr_gamma = lr_gamma
         self.scheduler_interval = scheduler_interval
         self.scheduler_frequency = scheduler_frequency
+        self.vocab_size = vocab_size
 
         self.model = GPT(
             vocab_size=vocab_size,
