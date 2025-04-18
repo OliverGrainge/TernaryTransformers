@@ -16,16 +16,6 @@ from runs.cli import TernaryCLI
 
 
 def main():
-    """
-    checkpoint_callback = ModelCheckpoint(
-        monitor="val_loss",
-        mode="min",
-        save_top_k=1,
-        filename="{epoch}-{val_loss:.2f}",
-        every_n_epochs=1,
-        dirpath="./checkpoints/vit/",
-    )
-    """
     TernaryCLI(
         model_class=ViTImageClassifierModule,
         datamodule_class=ImageClassificationDataModule,
@@ -35,7 +25,6 @@ def main():
             "precision": "16-mixed",
             "devices": 1,
             "log_every_n_steps": 10,
-            #"callbacks": [checkpoint_callback],
         },
         save_config_callback=None,
     )

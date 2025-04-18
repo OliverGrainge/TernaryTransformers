@@ -11,22 +11,14 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.cli import LightningCLI
 from trainers import GPTCausalModule
 from pytorch_lightning.cli import LightningCLI
+from runs.cli import TernaryCLI
 
 # On macOS you can use 'forkserver' (safer than fork) or even force 'fork'
 mp.set_start_method("forkserver", force=True)
 
 
 def main():
-    checkpoint_callback = ModelCheckpoint(
-        monitor="val_loss",
-        mode="min",
-        save_top_k=1,
-        filename="{epoch}-{val_loss:.2f}",
-        every_n_epochs=1,
-        dirpath="./checkpoints/{dataset_name}/",
-    )
-    
-    LightningCLI(
+    TernaryCLI(
         model_class=GPTCausalModule,
         datamodule_class=AutoLMDataModule,
         trainer_defaults={
@@ -36,7 +28,6 @@ def main():
             "devices": 1,
             "log_every_n_steps": 10,
         },
-        callbacks=[checkpoint_callback],
         save_config_callback=None,
     )
 

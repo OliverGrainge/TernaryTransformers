@@ -4,15 +4,15 @@ from typing import Any
 from pytorch_lightning import Trainer
 
 class TernaryCLI(LightningCLI):
-    
     def instantiate_trainer(self, **kwargs: Any) -> Trainer:
-        print("Instantiate trainer ================================================================")
-        trainer = super().instantiate_trainer(**kwargs)
-        trainer.callbacks.append(ModelCheckpoint(
+        extra_callbacks = [self._get(self.config_init, c) for c in self._parser(self.subcommand).callback_keys]
+        extra_callbacks.append(ModelCheckpoint(
             monitor="val_loss",
             mode="min",
             save_top_k=1,
-            filename="my-checkpoint-{epoch}-{val_loss:.2f}",
+            filename="{epoch}-{val_loss:.2f}",
+            dirpath=f"checkpoints/{self.config.fit.data.dataset_name}",
         ))
-        return trainer
+        trainer_config = {**self._get(self.config_init, "trainer", default={}), **kwargs}
+        return self._instantiate_trainer(trainer_config, extra_callbacks)
     
