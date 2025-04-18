@@ -6,6 +6,8 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, DataCollatorForLanguageModeling
 from datasets import load_dataset
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 class Wikitext2DataModule(pl.LightningDataModule):
     """
     LightningDataModule for masked‐language‐modeling on Wikitext‑2.
@@ -14,13 +16,10 @@ class Wikitext2DataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        # where to cache wikitext2
         data_dir: str = "./data/wikitext2",
-        # tokenizer & collator
         tokenizer_name: str = "bert-base-uncased",
         mlm_probability: float = 0.15,
         max_length: int = 512,
-        # loader config
         batch_size: int = 32,
         num_workers: int = 6,
         pin_memory: bool = True,

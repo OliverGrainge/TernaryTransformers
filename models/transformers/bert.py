@@ -77,7 +77,7 @@ class Bert(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        max_seq_len: int,
+        context_length: int,
         num_segments: int = 2,
         dim: int = 768,
         depth: int = 12,
@@ -96,7 +96,7 @@ class Bert(nn.Module):
         """
         Args:
             vocab_size (int): Size of vocabulary
-            max_seq_len (int): Maximum sequence length
+            context_length (int): Maximum sequence length
             num_segments (int, optional): Number of segment types. Defaults to 2
             dim (int, optional): Model dimension. Defaults to 768
             depth (int, optional): Number of transformer layers. Defaults to 12
@@ -124,7 +124,7 @@ class Bert(nn.Module):
             embedding_dim=dim,
         )
         self.position_embedding = nn.Embedding(
-            num_embeddings=max_seq_len,
+            num_embeddings=context_length,
             embedding_dim=dim,
         )
         self.segment_embedding = nn.Embedding(

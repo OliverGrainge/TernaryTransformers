@@ -15,7 +15,7 @@ class BertModule(pl.LightningModule):
     def __init__(
         self,
         vocab_size: int = 30522,
-        max_seq_len: int = 512,
+        context_length: int = 512,
         num_segments: int = 2,
         dim: int = 768,
         depth: int = 12,
@@ -55,7 +55,7 @@ class BertModule(pl.LightningModule):
 
         self.model = Bert(
             vocab_size=vocab_size,
-            max_seq_len=max_seq_len,
+            context_length=context_length,
             num_segments=num_segments,
             dim=dim,
             depth=depth,
@@ -72,6 +72,8 @@ class BertModule(pl.LightningModule):
             feedforward_linear_layer=feedforward_linear_layer,
         )
 
+        self.logits = nn.Linear(dim, vocab_size)
+
         self.loss_fn = nn.CrossEntropyLoss()
 
 
@@ -82,9 +84,10 @@ class BertModule(pl.LightningModule):
         token_type_ids: Optional[torch.Tensor] = None,
         labels: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        logits = self.model(
+        x = self.model(
             input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids
         )
+        logits = self.logits(x)
 
         if labels is None:
             return logits
