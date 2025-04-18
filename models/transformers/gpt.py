@@ -4,8 +4,7 @@ import torch
 import torch.nn as nn
 from einops import repeat
 
-from config import Config
-from models.blocks import FeedForward, TransformerAttention, ViTAttention
+from models.blocks import FeedForward, TransformerAttention
 from models.layers import LAYERS_REGISTRY
 
 
@@ -17,48 +16,46 @@ class CausalTransformer(nn.Module):
 
     def __init__(
         self,
-        model_config: Config,
+        dim: int,
+        depth: int,
+        heads: int,
+        dim_head: int,
+        ffn_dim: int,
+        dropout: float = 0.1,
+        attention_norm_layer: str = "LayerNorm",
+        attention_activation_layer: str = "GELU",
+        attention_linear_layer: str = "Linear",
+        feedforward_norm_layer: str = "LayerNorm",
+        feedforward_activation_layer: str = "GELU",
+        feedforward_linear_layer: str = "Linear",
     ) -> None:
-
         super().__init__()
         self.layers = nn.ModuleList([])
-        for _ in range(model_config.transformer_depth):
+        for _ in range(depth):
             self.layers.append(
                 nn.ModuleList(
                     [
                         TransformerAttention(
-                            model_config.transformer_dim,
-                            heads=model_config.transformer_heads,
-                            dim_head=model_config.transformer_dim_head,
-                            dropout=model_config.transformer_dropout,
-                            norm_layer=LAYERS_REGISTRY[
-                                model_config.attention_norm_layer.lower()
-                            ],
-                            activation_layer=LAYERS_REGISTRY[
-                                model_config.attention_activation_layer.lower()
-                            ],
-                            linear_layer=LAYERS_REGISTRY[
-                                model_config.attention_linear_layer.lower()
-                            ],
+                            dim,
+                            heads=heads,
+                            dim_head=dim_head,
+                            dropout=dropout,
+                            norm_layer=LAYERS_REGISTRY[attention_norm_layer.lower()],
+                            activation_layer=LAYERS_REGISTRY[attention_activation_layer.lower()],
+                            linear_layer=LAYERS_REGISTRY[attention_linear_layer.lower()],
                         ),
                         FeedForward(
-                            model_config.transformer_dim,
-                            model_config.transformer_ffn_dim,
-                            dropout=model_config.transformer_dropout,
-                            norm_layer=LAYERS_REGISTRY[
-                                model_config.feedforward_norm_layer.lower()
-                            ],
-                            activation_layer=LAYERS_REGISTRY[
-                                model_config.feedforward_activation_layer.lower()
-                            ],
-                            linear_layer=LAYERS_REGISTRY[
-                                model_config.feedforward_linear_layer.lower()
-                            ],
+                            dim,
+                            ffn_dim,
+                            dropout=dropout,
+                            norm_layer=LAYERS_REGISTRY[feedforward_norm_layer.lower()],
+                            activation_layer=LAYERS_REGISTRY[feedforward_activation_layer.lower()],
+                            linear_layer=LAYERS_REGISTRY[feedforward_linear_layer.lower()],
                         ),
                     ]
                 )
             )
-        self.norm = nn.LayerNorm(model_config.transformer_dim)
+        self.norm = nn.LayerNorm(dim)
 
     def forward(
         self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
@@ -79,26 +76,73 @@ class GPT(nn.Module):
 
     def __init__(
         self,
-        model_config: Config,
+        vocab_size: int,
+        max_seq_len: int,
+        dim: int,
+        depth: int,
+        heads: int,
+        dim_head: int = None,
+        ffn_dim: int = None,
+        dropout: float = 0.1,
+        embedding_dropout: float = 0.1,
+        attention_norm_layer: str = "LayerNorm",
+        attention_activation_layer: str = "GELU",
+        attention_linear_layer: str = "Linear",
+        feedforward_norm_layer: str = "LayerNorm",
+        feedforward_activation_layer: str = "GELU",
+        feedforward_linear_layer: str = "Linear",
     ) -> None:
+        """
+        Args:
+            vocab_size (int): Size of vocabulary
+            max_seq_len (int): Maximum sequence length
+            dim (int): Model dimension
+            depth (int): Number of transformer layers
+            heads (int): Number of attention heads
+            dim_head (int, optional): Dimension of each attention head. Defaults to dim // heads
+            ffn_dim (int, optional): Feedforward network dimension. Defaults to 4 * dim
+            dropout (float, optional): Dropout rate. Defaults to 0.1
+            embedding_dropout (float, optional): Embedding dropout rate. Defaults to 0.1
+            attention_norm_layer (str, optional): Normalization layer for attention. Defaults to "LayerNorm"
+            attention_activation_layer (str, optional): Activation layer for attention. Defaults to "GELU"
+            attention_linear_layer (str, optional): Linear layer for attention. Defaults to "Linear"
+            feedforward_norm_layer (str, optional): Normalization layer for feedforward. Defaults to "LayerNorm"
+            feedforward_activation_layer (str, optional): Activation layer for feedforward. Defaults to "GELU"
+            feedforward_linear_layer (str, optional): Linear layer for feedforward. Defaults to "Linear"
+        """
         super().__init__()
+
+        # Set default values for dim_head and ffn_dim if not provided
+        dim_head = dim_head if dim_head is not None else dim // heads
+        ffn_dim = ffn_dim if ffn_dim is not None else 4 * dim
 
         # --- Embedding Layers ---
         self.token_embedding = nn.Embedding(
-            num_embeddings=model_config.vocab_size,
-            embedding_dim=model_config.transformer_dim,  # This creates embeddings of correct size
+            num_embeddings=vocab_size,
+            embedding_dim=dim,
         )
         self.position_embedding = nn.Embedding(
-            num_embeddings=model_config.max_seq_len,
-            embedding_dim=model_config.transformer_dim,
+            num_embeddings=max_seq_len,
+            embedding_dim=dim,
         )
 
         # Dropout after embeddings
-        self.embedding_dropout = nn.Dropout(model_config.embedding_dropout)
+        self.embedding_dropout = nn.Dropout(embedding_dropout)
 
         # --- Transformer ---
         self.transformer = CausalTransformer(
-            model_config,
+            dim=dim,
+            depth=depth,
+            heads=heads,
+            dim_head=dim_head,
+            ffn_dim=ffn_dim,
+            dropout=dropout,
+            attention_norm_layer=attention_norm_layer,
+            attention_activation_layer=attention_activation_layer,
+            attention_linear_layer=attention_linear_layer,
+            feedforward_norm_layer=feedforward_norm_layer,
+            feedforward_activation_layer=feedforward_activation_layer,
+            feedforward_linear_layer=feedforward_linear_layer,
         )
 
     def forward(

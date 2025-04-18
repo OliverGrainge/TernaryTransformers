@@ -1,9 +1,6 @@
-from .wikitext import WikiTextMLMDataModule
-from config import WikiTextMLMDataConfig
+from .wikitext import Wikitext2DataModule
 
-__all__ = ["WikiTextMLMDataModule"]
+__all__ = ["Wikitext2DataModule"]
 
 
-ALL_MLM_DATALOADERS = {
-    "wikitext": (WikiTextMLMDataModule, WikiTextMLMDataConfig),
-}
+
