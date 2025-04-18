@@ -1,6 +1,6 @@
-from .wikitext import Wikitext2DataModule
+from .dataloader_factory import MLMDataModule
 
-__all__ = ["Wikitext2DataModule"]
+__all__ = ["MLMDataModule"]
 
 
 

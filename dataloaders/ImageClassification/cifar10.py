@@ -38,6 +38,7 @@ class CIFAR10DataModule(pl.LightningDataModule):
             transforms.Normalize(type(self).mean, type(self).std),
         ])
 
+
     def prepare_data(self) -> None:
         """
         Download CIFAR-10 train and test splits if not already present.

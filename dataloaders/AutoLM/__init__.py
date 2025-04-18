@@ -1,4 +1,5 @@
-from .shakespeare import ShakespeareDataModule
 
-__all__ = ["ShakespeareDataModule"]
+from .dataloader_factory import AutoLMDataModule
+
+__all__ = ["AutoLMDataModule"]
 

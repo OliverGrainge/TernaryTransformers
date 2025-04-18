@@ -57,6 +57,8 @@ class Transformer(nn.Module):
                 )
             )
 
+    
+
     def forward(
         self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
@@ -151,6 +153,8 @@ class Bert(nn.Module):
             feedforward_linear_layer=feedforward_linear_layer,
         )
 
+        self.logits = nn.Linear(dim, vocab_size)
+
     def forward(
         self,
         input_ids: torch.Tensor,
@@ -193,4 +197,5 @@ class Bert(nn.Module):
 
         # Pass through the Transformer with attention mask
         x = self.transformer(x, attention_mask=attention_mask)
-        return x
+        logits = self.logits(x)
+        return logits

@@ -30,28 +30,8 @@ class BertModule(pl.LightningModule):
         feedforward_norm_layer: str = "LayerNorm",
         feedforward_activation_layer: str = "GELU",
         feedforward_linear_layer: str = "Linear",
-
-        optimizer: str = "AdamW",
-        learning_rate: float = 1e-4,
-        weight_decay: float = 0.01,
-        lr_scheduler: str = None,
-        lr_t_max: int = None,  # Number of epochs/steps for cosine schedule
-        lr_step_size: int = None,  # For StepLR (Number of epochs/steps between each lr update)
-        lr_gamma: float = None,  # For StepLR (Multiplicative factor of learning rate decay)
-        scheduler_interval: str = "step",  # "epoch" or "step"
-        scheduler_frequency: int = 1,  # How often to step the scheduler
     ):
         super().__init__()
-
-        self.optimizer_name = optimizer
-        self.learning_rate = learning_rate
-        self.weight_decay = weight_decay
-        self.lr_scheduler = lr_scheduler
-        self.lr_t_max = lr_t_max
-        self.lr_step_size = lr_step_size
-        self.lr_gamma = lr_gamma
-        self.scheduler_interval = scheduler_interval
-        self.scheduler_frequency = scheduler_frequency
 
         self.model = Bert(
             vocab_size=vocab_size,
@@ -72,8 +52,6 @@ class BertModule(pl.LightningModule):
             feedforward_linear_layer=feedforward_linear_layer,
         )
 
-        self.logits = nn.Linear(dim, vocab_size)
-
         self.loss_fn = nn.CrossEntropyLoss()
 
 
@@ -84,10 +62,9 @@ class BertModule(pl.LightningModule):
         token_type_ids: Optional[torch.Tensor] = None,
         labels: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        x = self.model(
+        logits = self.model(
             input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids
         )
-        logits = self.logits(x)
 
         if labels is None:
             return logits
