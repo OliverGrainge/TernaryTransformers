@@ -52,6 +52,7 @@ class BertModule(pl.LightningModule):
             feedforward_linear_layer=feedforward_linear_layer,
         )
 
+        self.save_hyperparameters()
         self.loss_fn = nn.CrossEntropyLoss()
 
 

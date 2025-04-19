@@ -20,6 +20,8 @@ class ViTImageClassifierModule(pl.LightningModule):
         channels: int = 3,
         dropout: float = 0.1,
         embedding_dropout: float = 0.1,
+        num_classes: int = 10,
+
         attention_norm_layer: str = "LayerNorm",
         attention_activation_layer: str = "GELU",
         attention_linear_layer: str = "Linear",
@@ -27,7 +29,7 @@ class ViTImageClassifierModule(pl.LightningModule):
         feedforward_activation_layer: str = "GELU",
         feedforward_linear_layer: str = "Linear",
         ffn_dim: int = None,
-        num_classes: int = 10,
+        
     ):
         super().__init__()
 
@@ -54,7 +56,7 @@ class ViTImageClassifierModule(pl.LightningModule):
 
         self.loss_fn = nn.CrossEntropyLoss()
 
-
+        self.save_hyperparameters()
     def forward(self, x):
         x = self.model(x)
         logits = self.logits(x[:, 0])

@@ -1,7 +1,7 @@
 from typing import Any
 
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.cli import LightningCLI
 
 
@@ -19,6 +19,9 @@ class TernaryCLI(LightningCLI):
                 filename="{epoch}-{val_loss:.2f}",
                 dirpath=f"checkpoints/{self.config.fit.data.dataset_name}",
             )
+        )
+        extra_callbacks.append(
+            LearningRateMonitor(logging_interval="step", log_weight_decay=True)
         )
         trainer_config = {
             **self._get(self.config_init, "trainer", default={}),

@@ -9,8 +9,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 torch.set_float32_matmul_precision("high")
 
 from dataloaders.AutoLM import AutoLMDataModule
-from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.cli import LightningCLI
 from trainers import GPTCausalModule
 
 from runs.cli import TernaryCLI

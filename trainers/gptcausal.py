@@ -43,7 +43,8 @@ class GPTCausalModule(pl.LightningModule):
             feedforward_activation_layer=feedforward_activation_layer,
             feedforward_linear_layer=feedforward_linear_layer,
         )
-
+    
+        self.save_hyperparameters()
         self.loss_fn = torch.nn.CrossEntropyLoss()
 
     def forward(self, x):
