@@ -77,7 +77,7 @@ class GPT(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        max_seq_len: int,
+        context_length: int,
         dim: int,
         depth: int,
         heads: int,
@@ -95,7 +95,7 @@ class GPT(nn.Module):
         """
         Args:
             vocab_size (int): Size of vocabulary
-            max_seq_len (int): Maximum sequence length
+            context_length (int): Maximum sequence length
             dim (int): Model dimension
             depth (int): Number of transformer layers
             heads (int): Number of attention heads
@@ -122,7 +122,7 @@ class GPT(nn.Module):
             embedding_dim=dim,
         )
         self.position_embedding = nn.Embedding(
-            num_embeddings=max_seq_len,
+            num_embeddings=context_length,
             embedding_dim=dim,
         )
 

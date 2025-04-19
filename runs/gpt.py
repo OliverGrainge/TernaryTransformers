@@ -8,7 +8,7 @@ import torch
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 torch.set_float32_matmul_precision("high")
 
-from dataloaders.AutoLM import AutoLMDataModule
+from dataloaders import CausalLMDataModule
 from trainers import GPTCausalModule
 
 from runs.cli import TernaryCLI
@@ -20,7 +20,7 @@ mp.set_start_method("forkserver", force=True)
 def main():
     TernaryCLI(
         model_class=GPTCausalModule,
-        datamodule_class=AutoLMDataModule,
+        datamodule_class=CausalLMDataModule,
         trainer_defaults={
             "max_epochs": 20,
             "accelerator": "auto",

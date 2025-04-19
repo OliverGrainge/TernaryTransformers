@@ -9,7 +9,7 @@ class GPTCausalModule(pl.LightningModule):
     def __init__(
         self,
         vocab_size: int = 50257,
-        max_seq_len: int = 1024,
+        context_length: int = 1024,
         dim: int = 768,
         depth: int = 12,
         heads: int = 12,
@@ -28,7 +28,7 @@ class GPTCausalModule(pl.LightningModule):
 
         self.model = GPT(
             vocab_size=vocab_size,
-            max_seq_len=max_seq_len,
+            context_length=context_length,
             dim=dim,
             depth=depth,
             heads=heads,
@@ -43,7 +43,7 @@ class GPTCausalModule(pl.LightningModule):
             feedforward_activation_layer=feedforward_activation_layer,
             feedforward_linear_layer=feedforward_linear_layer,
         )
-    
+
         self.save_hyperparameters()
         self.loss_fn = torch.nn.CrossEntropyLoss()
 

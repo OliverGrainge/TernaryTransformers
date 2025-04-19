@@ -1,23 +1,21 @@
 seed_everything: 42
 
 model:
-  image_size: 32
-  patch_size: 4
+  vocab_size: 50257
+  context_length: 128
   dim: 256
   depth: 6
   heads: 8
-  dim_head: 64
-  channels: 3
+  dim_head: 32
+  ffn_dim: 1024
   dropout: 0.1
   embedding_dropout: 0.1
-  num_classes: 10
   attention_norm_layer: "LayerNorm"
   attention_activation_layer: "GELU"
   attention_linear_layer: "Linear"
   feedforward_norm_layer: "LayerNorm"
   feedforward_activation_layer: "GELU"
   feedforward_linear_layer: "Linear"
-  ffn_dim: 1024
 
 trainer:
   max_epochs: 50
@@ -28,18 +26,20 @@ trainer:
   logger:
     class_path: pytorch_lightning.loggers.WandbLogger
     init_args:
-      project: vit-cifar10
-      name: vit-small
+      project: gpt-shakespeare
+      name: gpt-small
       save_dir: ./wandb_logs
       log_model: false
 
 data:
-  dataset_name: cifar10
-  data_dir: ./data/
-  batch_size: 128
-  num_workers: 4
-  image_size: 32
-
+  dataset_name: shakespeare
+  data_dir: ./data/shakespeare
+  context_length: 128
+  batch_size: 32
+  num_workers: 6
+  tokenizer_name: gpt2
+  vocab_size: 50257
+  
 optimizer:
   class_path: torch.optim.Adam
   init_args:

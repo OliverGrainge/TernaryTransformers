@@ -7,6 +7,7 @@ import requests
 import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
+from tokenizers import Tokenizer, models, trainers, pre_tokenizers, normalizers
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -93,6 +94,7 @@ class ShakespeareDataModule(pl.LightningDataModule):
         batch_size: int = 32,
         num_workers: int = 6,
         tokenizer_name: str = "gpt2",
+        vocab_size: int = 1024
     ):
         """Initialize Shakespeare data module.
 
@@ -109,9 +111,23 @@ class ShakespeareDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.tokenizer_name = tokenizer_name
-        
+        self.vocab_size = vocab_size
+
+
         # Initialize tokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+        if tokenizer_name == "bpe" and not os.path.exists(os.path.join(self.data_dir, "shakespeare-tokenizer.json")): 
+            tokenizer = Tokenizer(models.BPE())
+            tokenizer.normalizer = normalizers.NFD()
+            tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel()
+            trainer = trainers.BpeTrainer(vocab_size=vocab_size, special_tokens=["<pad>", "<unk>", "<bos>", "<eos>"])
+            tokenizer.train([os.path.join(self.data_dir, "shakespeare.txt")], trainer=trainer)
+            tokenizer.save(os.path.join(self.data_dir, "shakespeare-tokenizer.json"))
+
+        elif tokenizer_name == "bpe" and os.path.exists(os.path.join(self.data_dir, "shakespeare-tokenizer.json")): 
+            tokenizer = Tokenizer.from_file("shakespeare-tokenizer.json")
+        else: 
+            self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+            
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
             

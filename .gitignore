@@ -9,3 +9,5 @@ __pycache__/*
 runs/checkpoints/*
 runs/data/*
 runs/lightning_logs/*
+runs/wandb_logs/*
+
