@@ -3,7 +3,7 @@ import pytest
 from pathlib import Path
 import torch 
 
-from dataloaders.AutoLM import ALL_AUTOLM_DATALOADERS
+from dataloaders.CausalLM import ALL_AUTOLM_DATALOADERS
 from transformers import AutoTokenizer
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset

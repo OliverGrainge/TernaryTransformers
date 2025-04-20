@@ -21,7 +21,6 @@ class ViTImageClassifierModule(pl.LightningModule):
         dropout: float = 0.1,
         embedding_dropout: float = 0.1,
         num_classes: int = 10,
-
         attention_norm_layer: str = "LayerNorm",
         attention_activation_layer: str = "GELU",
         attention_linear_layer: str = "Linear",

@@ -1,4 +1,4 @@
-from dataloaders.ImageClassification import ALL_IMAGE_CLASSIFICATION_DATALOADERS
+from dataloaders.ImageCLS import ALL_IMAGE_CLASSIFICATION_DATALOADERS
 import pytest
 from torchvision import transforms
 from torch.utils.data import DataLoader

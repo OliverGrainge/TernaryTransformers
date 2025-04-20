@@ -1,5 +1,5 @@
 import pytest 
-from dataloaders.MaskedLanguageModelling import ALL_MLM_DATALOADERS
+from dataloaders.MaskedLM import ALL_MLM_DATALOADERS
 from config import DataConfig
 from torch.utils.data import DataLoader
 
