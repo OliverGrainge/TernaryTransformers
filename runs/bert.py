@@ -10,6 +10,7 @@ torch.set_float32_matmul_precision("high")
 
 from dataloaders import MLMDataModule
 from trainers import BertModule
+
 from runs.cli import TernaryCLI
 
 mp.set_start_method("forkserver", force=True)

@@ -1,7 +1,7 @@
 seed_everything: 42
 
 model:
-  vocab_size: 50257
+  vocab_size: 1024
   context_length: 128
   dim: 256
   depth: 6
@@ -37,8 +37,8 @@ data:
   context_length: 128
   batch_size: 32
   num_workers: 6
-  tokenizer_name: gpt2
-  vocab_size: 50257
+  tokenizer_name: bpe
+  vocab_size: 1024
   
 optimizer:
   class_path: torch.optim.Adam

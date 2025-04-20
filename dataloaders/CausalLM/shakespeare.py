@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from tokenizers import Tokenizer, models, trainers, pre_tokenizers, normalizers
+from transformers import PreTrainedTokenizerFast
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -15,7 +16,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 class CharacterDataset(torch.utils.data.Dataset):
     def __init__(
         self,
-        data_dir: str = "./data/shakespeare",
+        data_dir: str = "./data/shakespeare/",
         tokenizer: AutoTokenizer = None,
         context_length: int = 64,
         split: Literal["train", "val", "test"] = "train",
@@ -32,7 +33,7 @@ class CharacterDataset(torch.utils.data.Dataset):
         self.data_dir.mkdir(exist_ok=True)
 
         # Load and split data
-        text = self._load_shakespeare_data()
+        text = self._load_shakespeare_data(self.data_dir)
         split_data = self._split_data(text)
         data = split_data[split]
 
@@ -43,9 +44,10 @@ class CharacterDataset(torch.utils.data.Dataset):
         self.context_length = context_length
         self.vocab_size = tokenizer.vocab_size
 
-    def _load_shakespeare_data(self) -> str:
+    @staticmethod
+    def _load_shakespeare_data(data_dir: str) -> str:
         """Load or download Shakespeare dataset."""
-        shakespeare_path = self.data_dir / "shakespeare.txt"
+        shakespeare_path = Path(os.path.join(data_dir, "shakespeare.txt"))
         url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
 
         if shakespeare_path.exists():
@@ -115,17 +117,23 @@ class ShakespeareDataModule(pl.LightningDataModule):
 
 
         # Initialize tokenizer
-        if tokenizer_name == "bpe" and not os.path.exists(os.path.join(self.data_dir, "shakespeare-tokenizer.json")): 
+        if tokenizer_name == "bpe" and not os.path.exists(os.path.join(self.data_dir, "shakespeare-tokenizer.json")):
+            text = CharacterDataset._load_shakespeare_data(data_dir)
             tokenizer = Tokenizer(models.BPE())
             tokenizer.normalizer = normalizers.NFD()
             tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel()
             trainer = trainers.BpeTrainer(vocab_size=vocab_size, special_tokens=["<pad>", "<unk>", "<bos>", "<eos>"])
-            tokenizer.train([os.path.join(self.data_dir, "shakespeare.txt")], trainer=trainer)
+            tokenizer.train_from_iterator([text], trainer=trainer)
             tokenizer.save(os.path.join(self.data_dir, "shakespeare-tokenizer.json"))
 
-        elif tokenizer_name == "bpe" and os.path.exists(os.path.join(self.data_dir, "shakespeare-tokenizer.json")): 
-            tokenizer = Tokenizer.from_file("shakespeare-tokenizer.json")
+            # ✅ Wrap it
+            self.tokenizer = PreTrainedTokenizerFast(tokenizer_object=tokenizer)
+            self.tokenizer.add_special_tokens({"pad_token": "<pad>", "unk_token": "<unk>", "bos_token": "<bos>", "eos_token": "<eos>"})
+        elif tokenizer_name == "bpe" and os.path.exists(os.path.join(self.data_dir, "shakespeare-tokenizer.json")):
+            self.tokenizer = PreTrainedTokenizerFast(tokenizer_file=os.path.join(self.data_dir, "shakespeare-tokenizer.json"))
+            self.tokenizer.add_special_tokens({"pad_token": "<pad>", "unk_token": "<unk>", "bos_token": "<bos>", "eos_token": "<eos>"})
         else: 
+            print("using pretrained")
             self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
             
         if self.tokenizer.pad_token is None:
