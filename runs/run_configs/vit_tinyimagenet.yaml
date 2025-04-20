@@ -1,0 +1,53 @@
+seed_everything: 42
+
+model:
+  image_size: 64  # TinyImageNet is 64x64
+  patch_size: 8   # Increased patch size for larger images
+  dim: 512        # Increased model capacity
+  depth: 8        # More layers
+  heads: 8
+  dim_head: 64
+  channels: 3
+  dropout: 0.1
+  embedding_dropout: 0.1
+  num_classes: 200  # TinyImageNet has 200 classes
+  attention_norm_layer: "LayerNorm"
+  attention_activation_layer: "GELU"
+  attention_linear_layer: "Linear"
+  feedforward_norm_layer: "LayerNorm"
+  feedforward_activation_layer: "GELU"
+  feedforward_linear_layer: "Linear"
+  ffn_dim: 2048    # Increased FFN dimension
+
+trainer:
+  max_epochs: 100  # More epochs for larger dataset
+  accelerator: auto
+  devices: 1
+  precision: 16
+  num_sanity_val_steps: 0
+  logger:
+    class_path: pytorch_lightning.loggers.WandbLogger
+    init_args:
+      project: vit-tinyimagenet
+      name: vit-base
+      save_dir: ./wandb_logs
+      log_model: false
+
+data:
+  dataset_name: tinyimagenet
+  data_dir: ./data/
+  batch_size: 64   # Reduced batch size due to larger model/images
+  num_workers: 4
+  image_size: 64   # TinyImageNet native resolution
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 0.0001     # Lower learning rate for stability
+    weight_decay: 0.0001
+
+lr_scheduler:
+  class_path: torch.optim.lr_scheduler.StepLR
+  init_args:
+    step_size: 30  # Adjusted for more epochs
+    gamma: 0.5

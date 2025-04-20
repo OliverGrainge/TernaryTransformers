@@ -1,13 +1,13 @@
 seed_everything: 42
 
 model:
-  vocab_size: 1024
-  context_length: 256
-  dim: 256
-  depth: 6
+  vocab_size: 50257
+  context_length: 512
+  dim: 512
+  depth: 8
   heads: 8
-  dim_head: 32
-  ffn_dim: 1024
+  dim_head: 64
+  ffn_dim: 2048
   dropout: 0.1
   embedding_dropout: 0.1
   attention_norm_layer: "LayerNorm"
@@ -18,36 +18,36 @@ model:
   feedforward_linear_layer: "Linear"
 
 trainer:
-  max_epochs: 50
+  max_epochs: 100
   accelerator: auto
   devices: 1
   precision: 16
   num_sanity_val_steps: 0
+  val_check_interval: 0.0001  # Check validation 4 times per epoch
   logger:
     class_path: pytorch_lightning.loggers.WandbLogger
     init_args:
-      project: gpt-shakespeare
-      name: gpt-small
+      project: gpt-wikitext2
+      name: gpt-medium
       save_dir: ./wandb_logs
       log_model: false
 
 data:
-  dataset_name: shakespeare
-  data_dir: ./data/shakespeare
-  context_length: 256
-  batch_size: 128
+  dataset_name: wikitext2
+  data_dir: ./data/wikitext2
+  context_length: 512
+  batch_size: 32
   num_workers: 6
-  tokenizer_name: bpe
-  vocab_size: 1024
+  tokenizer_name: gpt2
   
 optimizer:
-  class_path: torch.optim.Adam
+  class_path: torch.optim.AdamW
   init_args:
-    lr: 0.0003
-    weight_decay: 0.0001
+    lr: 0.0001
+    weight_decay: 0.01
 
 lr_scheduler:
-  class_path: torch.optim.lr_scheduler.StepLR
+  class_path: torch.optim.lr_scheduler.CosineAnnealingLR
   init_args:
-    step_size: 20
-    gamma: 0.5
+    T_max: 100
+    eta_min: 1.0e-6

@@ -48,6 +48,7 @@ class CharacterDataset(torch.utils.data.Dataset):
     def _load_shakespeare_data(data_dir: str) -> str:
         """Load or download Shakespeare dataset."""
         shakespeare_path = Path(os.path.join(data_dir, "shakespeare.txt"))
+        os.makedirs(data_dir, exist_ok=True)
         url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
 
         if shakespeare_path.exists():

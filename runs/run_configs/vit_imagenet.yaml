@@ -1,0 +1,54 @@
+seed_everything: 42
+
+model:
+  image_size: 224  # Standard ImageNet resolution
+  patch_size: 16   # Standard ViT patch size for ImageNet
+  dim: 768        # Increased model capacity for full ImageNet
+  depth: 12       # More layers for increased capacity
+  heads: 12       # More attention heads
+  dim_head: 64
+  channels: 3
+  dropout: 0.1
+  embedding_dropout: 0.1
+  num_classes: 1000  # ImageNet has 1000 classes
+  attention_norm_layer: "LayerNorm"
+  attention_activation_layer: "GELU"
+  attention_linear_layer: "Linear"
+  feedforward_norm_layer: "LayerNorm"
+  feedforward_activation_layer: "GELU"
+  feedforward_linear_layer: "Linear"
+  ffn_dim: 3072    # Increased FFN dimension for larger model
+
+trainer:
+  max_epochs: 300  # ImageNet typically needs more epochs
+  accelerator: auto
+  devices: "auto"  # Use all available devices
+  strategy: "ddp"  # Distributed training
+  precision: 16
+  num_sanity_val_steps: 2
+  logger:
+    class_path: pytorch_lightning.loggers.WandbLogger
+    init_args:
+      project: vit-imagenet
+      name: vit-base
+      save_dir: ./wandb_logs
+      log_model: false
+
+data:
+  dataset_name: imagenet
+  data_dir: ./data/imagenet  # Update path to ImageNet directory
+  batch_size: 256   # Increased batch size for distributed training
+  num_workers: 8    # More workers for larger dataset
+  image_size: 224   # Standard ImageNet resolution
+
+optimizer:
+  class_path: torch.optim.AdamW  # Switch to AdamW
+  init_args:
+    lr: 0.0003      # Adjusted learning rate
+    weight_decay: 0.05  # Increased weight decay
+
+lr_scheduler:
+  class_path: torch.optim.lr_scheduler.CosineAnnealingLR  # Better scheduler for ImageNet
+  init_args:
+    T_max: 300  # Match with max_epochs
+    eta_min: 1e-6
